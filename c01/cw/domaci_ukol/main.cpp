@@ -1,8 +1,15 @@
+#include <chrono>
+#include <cstddef>
 #include <cstdint>
+#include <format>
 #include <iostream>
+#include <string>
+#include <string_view>
+#include <thread>
 #include <vector>
 
 constexpr uint64_t Number_Of_Numbers = 100'000'000;
+constexpr uint64_t Number_Of_Runs = 10;
 
 // Collatz conjecture
 // https://en.wikipedia.org/wiki/Collatz_conjecture
@@ -24,6 +31,125 @@ uint64_t collatz(uint64_t n) {
   return steps;
 }
 
+void pre_cout(const std::string_view &title) {
+  int line_length = 8 + 4 * 12 + 4 * 3;
+
+  std::cout << std::string(line_length, '-') << "\n"
+            << std::format("{:^{}}", title, line_length) << "\n"
+            << std::string(line_length, '-') << "\n"
+
+            << std::format("{:<8} | {:>12} | {:>12} | {:>12} | {:>12}", "index",
+                           "max steps", "number", "avg step", "time")
+            << "\n"
+
+            << std::string(line_length, '-') << std::endl;
+}
+
+double post_cout(const std::vector<long> &run_times) {
+  long sum = 0;
+  for (auto n : run_times) {
+    sum += n;
+  }
+  double avg = sum / static_cast<double>(Number_Of_Runs);
+  std::cout << "\n======> Prumerna doba vypoctu: " << avg << "ms\n"
+            << std::endl;
+
+  return avg;
+}
+
+long do_the_thing(int run_number) {
+
+  std::vector<uint64_t> stepCount{};
+  stepCount.reserve(Number_Of_Numbers);
+
+  uint64_t max = 0;
+  uint64_t sum = 0;
+  uint64_t maxIndex = 0;
+
+  // TIMER START NOW
+  auto tp = std::chrono::high_resolution_clock::now();
+
+  // only one for-loop
+  for (uint64_t i = 0; i < Number_Of_Numbers; i++) {
+    stepCount.push_back(collatz(i + 1));
+
+    if (stepCount[i] > max) {
+      max = stepCount[i];
+      maxIndex = i;
+    }
+    sum += stepCount[i];
+  }
+
+  // TIMER END NOW
+  auto dur = std::chrono::high_resolution_clock::now() - tp;
+  auto elapsed_ms =
+      std::chrono::duration_cast<std::chrono::milliseconds>(dur).count();
+
+  std::cout << std::format("{:<8} | {:>12} | {:>12} | {:>12} | {:>12}",
+                           run_number, max, maxIndex + 1,
+                           sum / stepCount.size(), elapsed_ms)
+            << std::endl;
+
+  return elapsed_ms;
+}
+
+long do_the_thing_parallel(int run_number) {
+
+  std::vector<uint64_t> step_count{};
+  step_count.resize(Number_Of_Numbers);
+
+  uint64_t max = 0;
+  uint64_t sum = 0;
+  uint64_t max_index = 0;
+
+  // TIMER START NOW
+  auto tp = std::chrono::high_resolution_clock::now();
+
+  constexpr size_t Number_Of_Workers = 8;
+
+  // distribute the work in equal chunks
+  std::vector<std::thread> workers{};
+  size_t a, b = 0;
+  for (int i = 0; i < Number_Of_Workers; i++) {
+    a = b;
+    b = i * Number_Of_Numbers / Number_Of_Workers;
+
+    workers.emplace_back([&step_count, a, b]() {
+      for (size_t i = a; i < b; i++) {
+        step_count[i] = collatz(i + 1);
+      }
+    });
+  }
+
+  // wait on workers
+  while (workers.size() > 0) {
+    if (workers.back().joinable()) {
+      workers.back().join();
+      workers.pop_back();
+    }
+  }
+
+  for (uint64_t i = 0; i < Number_Of_Numbers; ++i) {
+    if (step_count[i] > max) {
+      max = step_count[i];
+      max_index = i;
+    }
+    sum += step_count[i];
+  }
+
+  // TIMER END NOW
+  auto dur = std::chrono::high_resolution_clock::now() - tp;
+  auto elapsed_ms =
+      std::chrono::duration_cast<std::chrono::milliseconds>(dur).count();
+
+  std::cout << std::format("{:<8} | {:>12} | {:>12} | {:>12} | {:>12}",
+                           run_number, max, max_index + 1,
+                           sum / step_count.size(), elapsed_ms)
+            << std::endl;
+
+  return elapsed_ms;
+}
+
 int main(int argc, char **argv) {
 
   // Vas ukol:
@@ -35,9 +161,9 @@ int main(int argc, char **argv) {
   // (viz prednasky)
 
   /* PROSTOR PRO VYSLEDKY:
-   * - seriova verze:   ______ ms
-   * - paralelni verze: ______ ms
-   * - urychleni:       ______
+   * - seriova verze:   23437.3ms
+   * - paralelni verze:  4966.3ms
+   * - urychleni:       471.927 %
    */
 
   // NOTE: samozrejme, ze na to existuji efektivni zpusoby; dnes je ale cilem,
@@ -68,27 +194,26 @@ int main(int argc, char **argv) {
   // ktere byl zaznamenan maximalni pocet kroku (ale pocet kroku musi byt
   // stejny)
 
-  std::vector<uint64_t> stepCount;
+  std::vector<long> run_times{};
+  run_times.reserve(Number_Of_Runs);
 
-  for (uint64_t i = 1; i < Number_Of_Numbers; i++) {
-    stepCount.push_back(collatz(i));
+  pre_cout("PARALLEL");
+  for (int run = 0; run < Number_Of_Runs; ++run) {
+    run_times.push_back(do_the_thing_parallel(run));
   }
+  auto parallel_avg = post_cout(run_times);
 
-  uint64_t max = 0;
-  uint64_t avg = 0;
-  uint64_t maxIndex = 0;
-  for (uint64_t i = 0; i < stepCount.size(); i++) {
-    if (stepCount[i] > max) {
-      max = stepCount[i];
-      maxIndex = i;
-    }
-    avg += stepCount[i];
+  run_times.clear();
+  run_times.reserve(Number_Of_Runs);
+
+  pre_cout("SERIAL");
+  for (int run = 0; run < Number_Of_Runs; ++run) {
+    run_times.push_back(do_the_thing(run));
   }
+  auto serial_avg = post_cout(run_times);
 
-  std::cout << "Nejvetsi nalezeny pocet kroku je " << max << " pro cislo "
-            << maxIndex + 1 << std::endl;
-  std::cout << "Prumerny pocet kroku je " << avg / stepCount.size()
-            << std::endl;
+  std::cout << "<=====\n ~~~> Urychleni = " << serial_avg / parallel_avg * 100
+            << " % <~~~\n=====>" << std::endl;
 
   return 0;
 }

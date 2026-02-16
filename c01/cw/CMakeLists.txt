@@ -18,6 +18,7 @@ target_link_libraries(upp_01_c PRIVATE TBB::tbb)
 
 target_compile_options(upp_01_b PRIVATE -O3)
 target_compile_options(upp_01_c PRIVATE -O3)
+target_compile_options(upp_01_dcv PRIVATE -O3)
 
 # set binaries dir for output
 set_target_properties(upp_01_a upp_01_b upp_01_c upp_01_d upp_01_dcv PROPERTIES
