@@ -2,3 +2,6 @@ build/
 bin/
 .cache/
 compile_commands.json
+
+# data for sem1
+*.csv
