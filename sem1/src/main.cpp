@@ -7,7 +7,7 @@ int main(int argc, char **argv) {
   bool parallel = false;
 
   for (int i = 1; i < argc; ++i) {
-    if (argv[i] == "--parallel"sv) {
+    if (argv[i] == "--parallel"sv || argv[i] == "-p"sv) {
       parallel = true;
     }
   }
