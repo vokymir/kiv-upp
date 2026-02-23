@@ -1,0 +1,210 @@
+Total path cost: 276.908
+Nodes: 
+1 - Aguinaldo
+2 - Arazane
+103 - Huangyadong
+104 - Brecht
+105 - Gross-Gerau
+206 - Romeoville
+207 - Byumba
+309 - Lekala
+411 - Victoria
+512 - Palazzolo Acreide
+514 - Maradi
+616 - Rennes
+717 - Schoppingen
+718 - Balozi
+820 - Murnau am Staffelsee
+821 - New LaFayette
+822 - Vlotho
+924 - Mit Nama
+1025 - Lop Buri
+1026 - New Kunsan
+1127 - Alora
+1329 - Taiyong
+1330 - Vianopolis
+1432 - Nouadhibou
+1432 - Nouadhibou
+1532 - Kraslice
+1632 - Tatabanya
+1732 - Guanagazapa
+1832 - New Danyang
+1932 - Romaniv
+2032 - Scott
+2232 - Cold Springs
+2332 - Shiling
+2432 - Pato Bragado
+2633 - Triunfo
+2833 - Hanko
+3033 - Morro da Fumaca
+3133 - North Canton
+3233 - Kpalime
+3434 - Taio
+3634 - Velburg
+3734 - Nopaltepec
+3835 - New Rochelle Park
+3835 - New Rochelle Park
+3936 - Pedro Juan Caballero
+4136 - Orchomenos
+4337 - Stirling
+4437 - East Cleveland
+4538 - Viseu de Sus
+4738 - Penafiel
+4939 - New New Mindszent
+5040 - Mao
+5241 - North Arlington
+5441 - Solihull
+5541 - New Ostrov
+5641 - New Claveria
+5842 - Omiyacho
+6043 - Douar Sgarta
+6143 - Austintown
+6343 - Pass Christian
+6543 - New Billinge
+6543 - New Billinge
+6643 - Khalkhal
+6843 - New Stanwood
+6842 - New Ladera Heights
+6942 - Lithgow
+7042 - Las Tablas
+7041 - Waghausel
+7040 - New Cartagena del Chaira
+7038 - New Datu Paglas
+7037 - Ljig
+7036 - Ridgewood
+7035 - Flein
+7034 - New Rio Claro
+7033 - Mataas Na Kahoy
+7233 - New Vlissingen
+7333 - New Belousovo
+7333 - New Belousovo
+7232 - Cramond
+7131 - Saint-Herblain
+6929 - "Islamorada, Village of Islands"
+6828 - Dornhan
+6827 - New Cluses
+6726 - Dunbar
+6625 - East Riverdale
+6524 - Branesti
+6523 - New Schleswig
+6321 - Dobryanka
+6320 - Beaver Dam
+6219 - New New New St. Ann
+6117 - Mahdasht
+6015 - New New Burj al `Arab
+6014 - Hungerford
+5812 - Bellevue
+5710 - Gilching
+5608 - Lacombe
+5507 - Petropavlovsk-Kamchatskiy
+5505 - Ichinomiya
+5404 - Dietzenbach
+5403 - Quistello
+5302 - Baliza
+5302 - Baliza
+5202 - Velizy-Villacoublay
+5303 - Clervaux
+5304 - Cruzeta
+5305 - Carol Stream
+5205 - Gar
+5207 - Knetzgau
+5208 - San Miguel Panixtlahuaca
+5210 - Jose Abad Santos
+5211 - Aledo
+5212 - Leon de los Aldama
+5214 - Northern Rockies
+5215 - New Suolahti
+5216 - Ratlam
+5217 - Fort Mitchell
+5218 - Sant'Arcangelo
+5219 - Westphalia
+5221 - Nidderau
+5223 - Progreso
+5224 - Afega
+5225 - Hausham
+5227 - Byala Slatina
+5229 - Montgeron
+5129 - San Francisco
+5131 - Debica
+5031 - Ventimiglia
+5032 - Corropoli
+5034 - Upernavik
+5035 - Campo San Martino
+5037 - New Haddington
+5038 - Wangtuan
+4938 - Sainte-Savine
+4940 - North Walsham
+4941 - Kermit
+4942 - Ningde
+4944 - North Patchogue
+4844 - Turkeve
+4845 - Schlieren
+4847 - Hedong
+4848 - Farmington
+4850 - Choconta
+4852 - Zemamra
+4853 - Beaver Dam
+4753 - Louveira
+4755 - Shaoxing
+4757 - Chikusei
+4858 - Freeport
+4859 - Pichilemu
+4860 - New Le Vesinet
+4861 - Oud-Beijerland
+4863 - Frenstat pod Radhostem
+4864 - Preveza
+4965 - Alta Gracia
+4965 - Alta Gracia
+5065 - Gloggnitz
+5266 - Chefchaouene
+5367 - Amagi
+5468 - Serra Branca
+5468 - Serra Branca
+5469 - Arlington
+5369 - Douar Messassa
+5269 - Herscheid
+5271 - Lebanon
+5171 - Limoeiro
+5172 - Markt Erlbach
+4972 - Wenxian Chengguanzhen
+4974 - Guaicara
+4874 - Balakliia
+4875 - Sarvar
+4775 - Burton
+4777 - Arar
+4779 - New Springdale
+4679 - Duarte
+4680 - Ventanas
+4682 - New Senador Guiomard
+4683 - Diest
+4583 - Saguenay
+4584 - Binyin
+4585 - Kuchinarai
+4586 - Ponte Nova
+4586 - Ponte Nova
+4486 - Fort Wellington
+4284 - Tubo
+4084 - Glodeni
+3983 - Ronse
+3883 - Nedryhayliv
+3681 - Klingenberg am Main
+3581 - Al Quway`iyah
+3481 - Sarmin
+3281 - Ladera Heights
+3180 - Bentivoglio
+2979 - Castelnau-d'Estretefonds
+2878 - Ealing
+2878 - Ealing
+2877 - Zipacon
+2977 - Les Clayes-sous-Bois
+2976 - The Dalles
+2975 - Crowley
+2974 - Beihai
+2973 - New Canton
+3173 - Folkestone
+3373 - Tago
+3372 - Lancaster
+3371 - Freiberg am Neckar
+3370 - Msaken
+3369 - Cherry Hinton
+3367 - Spresiano
