@@ -31,7 +31,7 @@ void CUser::Add_Friend(const std::string &username) {
 }
 
 void CUser::Pass_Message(const std::string &from, const std::string &message) {
-  // std::lock_guard<std::mutex> guard(m_queueMtx);
+  std::lock_guard<std::mutex> guard(m_queueMtx);
   m_messageQueue.push_back({from, message});
 }
 
@@ -61,7 +61,7 @@ void CUser::Thread_Fnc() {
     // dokud neni fronta prichozich zprav prazdna...
     while (!m_messageQueue.empty()) {
 
-      // std::lock_guard<std::mutex> guard(m_queueMtx);
+      std::lock_guard<std::mutex> guard(m_queueMtx);
 
       // vybereme zpravu
       auto msg = m_messageQueue.front();

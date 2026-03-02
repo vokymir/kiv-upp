@@ -31,7 +31,7 @@ private:
   std::unique_ptr<std::thread> m_thread;
 
   // mutex - budeme potrebovat
-  // std::mutex m_queueMtx;
+  std::mutex m_queueMtx;
 
 private:
   // metoda vlakna
