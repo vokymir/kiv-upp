@@ -6,6 +6,8 @@
 /*
  * Vas ukol je jednoduchy:
  *  - nejprve opravte implementaci Semaphore, aby fungoval, jak ma
+ *  + nemit aktivni cekani ale podminkovou promennou treba
+ *  + udelat P,V atomicke
  *  - pote doplnte semafory nutne k synchronizaci nize uvedeneho kodu, aby se
  * vypsalo: Synchronizovat vlakna neni zadna sranda
  *    - neupravujte vypisy samotne! Donutte vlakna synchronizovat se tak, aby se
