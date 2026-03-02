@@ -61,10 +61,16 @@ void CUser::Thread_Fnc() {
     // dokud neni fronta prichozich zprav prazdna...
     while (!m_messageQueue.empty()) {
 
-      std::lock_guard<std::mutex> guard(m_queueMtx);
+      TMsg_Record msg{};
+      {
+        std::lock_guard<std::mutex> guard(m_queueMtx);
 
-      // vybereme zpravu
-      auto msg = m_messageQueue.front();
+        // vybereme zpravu
+        msg = m_messageQueue.front();
+
+        // odebereme z fronty
+        m_messageQueue.pop_front();
+      }
 
       // vypiseme ji na vystup
       std::cout << "From " << msg.from << " to " << m_username << ": "
@@ -79,9 +85,6 @@ void CUser::Thread_Fnc() {
           usr->Pass_Message(m_username, "REPLY: Hi!");
         }
       }
-
-      // odebereme z fronty
-      m_messageQueue.pop_front();
     }
 
     // hodime kostkou, a pokud to vyjde, tak kontaktujeme nejakeho nahodneho
