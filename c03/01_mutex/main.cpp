@@ -88,8 +88,8 @@ void Bank_Account_Test_Fnc(IBank_Account &account) {
 
 int main(int argc, char **argv) {
   // testovaci ucet - nechte odkomentovany jen ten, ktery chcete vyzkouset
-  CBank_Account_Unsafe account(Initial_Balance);
-  // CBank_Account_Mutex account(Initial_Balance);
+  // CBank_Account_Unsafe account(Initial_Balance);
+  CBank_Account_Mutex account(Initial_Balance);
 
   // zmerime i cas
   auto tp_start = std::chrono::steady_clock::now();
