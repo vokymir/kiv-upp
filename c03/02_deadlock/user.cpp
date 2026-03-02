@@ -5,97 +5,94 @@
 
 #include "world.h"
 
-namespace
-{
-	std::random_device rdev;
+namespace {
+std::random_device rdev;
 }
 
-// pomocna funkce pro pojmenovani vlakna - abychom ho pak v debuggeru snadno nasli
+// pomocna funkce pro pojmenovani vlakna - abychom ho pak v debuggeru snadno
+// nasli
 #ifdef _WIN32
-#include <windows.h>
 #include <processthreadsapi.h>
-void Set_Thread_Name(const std::string& name)
-{
-	std::wstring wstr(name.begin(), name.end());
+#include <windows.h>
+void Set_Thread_Name(const std::string &name) {
+  std::wstring wstr(name.begin(), name.end());
 
-	SetThreadDescription(GetCurrentThread(),wstr.c_str());
+  SetThreadDescription(GetCurrentThread(), wstr.c_str());
 }
 #else
 #include <pthread.h>
-void Set_Thread_Name(const std::string& name)
-{
-	pthread_setname_np(pthread_self(), name.c_str());
+void Set_Thread_Name(const std::string &name) {
+  pthread_setname_np(pthread_self(), name.c_str());
 }
 #endif
 
-void CUser::Add_Friend(const std::string& username)
-{
-	m_friends.push_back(username);
+void CUser::Add_Friend(const std::string &username) {
+  m_friends.push_back(username);
 }
 
-void CUser::Pass_Message(const std::string& from, const std::string& message)
-{
-	m_messageQueue.push_back({ from, message });
+void CUser::Pass_Message(const std::string &from, const std::string &message) {
+  // std::lock_guard<std::mutex> guard(m_queueMtx);
+  m_messageQueue.push_back({from, message});
 }
 
-void CUser::Start()
-{
-	if (m_thread) {
-		return;
-	}
+void CUser::Start() {
+  if (m_thread) {
+    return;
+  }
 
-	m_running = true;
-	m_thread = std::make_unique<std::thread>(&CUser::Thread_Fnc, this);
+  m_running = true;
+  m_thread = std::make_unique<std::thread>(&CUser::Thread_Fnc, this);
 }
 
-void CUser::Wait()
-{
-	if (m_thread && m_thread->joinable()) {
-		m_thread->join();
-	}
+void CUser::Wait() {
+  if (m_thread && m_thread->joinable()) {
+    m_thread->join();
+  }
 }
 
-void CUser::Thread_Fnc()
-{
-	Set_Thread_Name(m_username);
+void CUser::Thread_Fnc() {
+  Set_Thread_Name(m_username);
 
-	std::default_random_engine reng(rdev());
-	std::uniform_real_distribution<double> dist_contact(0, 1.0);
-	std::uniform_int_distribution<size_t> dist_friend(0, m_friends.size() - 1);
+  std::default_random_engine reng(rdev());
+  std::uniform_real_distribution<double> dist_contact(0, 1.0);
+  std::uniform_int_distribution<size_t> dist_friend(0, m_friends.size() - 1);
 
-	while (m_running)
-	{
-		// dokud neni fronta prichozich zprav prazdna...
-		while (!m_messageQueue.empty()) {
+  while (m_running) {
+    // dokud neni fronta prichozich zprav prazdna...
+    while (!m_messageQueue.empty()) {
 
-			// vybereme zpravu
-			auto msg = m_messageQueue.front();
+      // std::lock_guard<std::mutex> guard(m_queueMtx);
 
-			// vypiseme ji na vystup
-			std::cout << "From " << msg.from << " to " << m_username << ": " << msg.msg << std::endl;
+      // vybereme zpravu
+      auto msg = m_messageQueue.front();
 
-			// a pokud to neni odpoved, tak pozdravime zpet
-			if (msg.msg.substr(0, 5) != "REPLY") {
+      // vypiseme ji na vystup
+      std::cout << "From " << msg.from << " to " << m_username << ": "
+                << msg.msg << std::endl;
 
-				// posleme mu odpoved
-				auto usr = sWorld.Get_User(msg.from);
-				if (usr) {
-					usr->Pass_Message(m_username, "REPLY: Hi!");
-				}
-			}
+      // a pokud to neni odpoved, tak pozdravime zpet
+      if (msg.msg.substr(0, 5) != "REPLY") {
 
-			// odebereme z fronty
-			m_messageQueue.pop_front();
-		}
+        // posleme mu odpoved
+        auto usr = sWorld.Get_User(msg.from);
+        if (usr) {
+          usr->Pass_Message(m_username, "REPLY: Hi!");
+        }
+      }
 
-		// hodime kostkou, a pokud to vyjde, tak kontaktujeme nejakeho nahodneho kamarada
-		if (dist_contact(reng) < 0.3) {
+      // odebereme z fronty
+      m_messageQueue.pop_front();
+    }
 
-			auto fr_idx = dist_friend(reng);
-			auto usr = sWorld.Get_User(m_friends[fr_idx]);
-			if (usr) {
-				usr->Pass_Message(m_username, "Hello!");
-			}
-		}
-	}
+    // hodime kostkou, a pokud to vyjde, tak kontaktujeme nejakeho nahodneho
+    // kamarada
+    if (dist_contact(reng) < 0.3) {
+
+      auto fr_idx = dist_friend(reng);
+      auto usr = sWorld.Get_User(m_friends[fr_idx]);
+      if (usr) {
+        usr->Pass_Message(m_username, "Hello!");
+      }
+    }
+  }
 }
