@@ -37,6 +37,9 @@ void printer_vlakno(int vlaknoId) {
 
 int main(int argc, char **argv) {
 
+  ukol();
+  return 1;
+
   Print_Counter.resize(Thread_Count);
 
   std::vector<std::unique_ptr<std::thread>> threads(Thread_Count);

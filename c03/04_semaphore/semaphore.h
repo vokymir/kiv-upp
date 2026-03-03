@@ -1,27 +1,39 @@
 #pragma once
 
+#include <cassert>
+#include <condition_variable>
 #include <mutex>
 
-/*
- * POZOR: tato implementace semaforu nebude fungovat - zakladni predpoklad je,
- * ze metody P a V jsou atomicke tady ale nic atomicitu nezarucuje!
- */
 class Semaphore {
 private:
-  int counter;
+  int counter_;
+  std::mutex mutex_;
+  std::condition_variable vodemceno;
 
 public:
-  Semaphore(int init) : counter(init) {}
+  Semaphore(int init) : counter_(init) {}
 
   void P(int cnt) {
-    while (counter < cnt) {
-      ;
-    }
+    assert(cnt >= 0 && "Semaphore->P(count): count must be greater than zero.");
 
-    counter -= cnt;
+    std::unique_lock<std::mutex> lck(mutex_);
+
+    vodemceno.wait(lck, [this, cnt]() { return this->counter_ >= cnt; });
+
+    counter_ -= cnt;
   }
 
-  void V(int cnt) { counter += cnt; }
+  void V(int cnt) {
+    assert(cnt >= 0 && "Semaphore->V(count): count must be greater than zero.");
 
-  int Get() { return counter; }
+    std::unique_lock<std::mutex> lck(mutex_);
+
+    counter_ += cnt;
+    vodemceno.notify_all();
+  }
+
+  int Get() {
+    std::lock_guard<std::mutex> lck(mutex_);
+    return counter_;
+  }
 };

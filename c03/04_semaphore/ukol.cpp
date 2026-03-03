@@ -15,22 +15,31 @@
  */
 
 // TODO: SEM DOPLNTE SEMAFORY
+Semaphore s1{0};
 
 void A() {
+  s1.P(1);
+  std::cout << "vlakna "; // 1
+  s1.V(2);
 
-  std::cout << "vlakna ";
-
-  std::cout << "sranda ";
+  s1.P(4);
+  std::cout << "sranda "; // 4
 }
 
 void B() {
+  std::cout << "Synchronizovat "; // 0
+  s1.V(1);
 
-  std::cout << "Synchronizovat ";
-
-  std::cout << "neni ";
+  s1.P(2);
+  std::cout << "neni "; // 2
+  s1.V(3);
 }
 
-void C() { std::cout << "zadna "; }
+void C() {
+  s1.P(3);
+  std::cout << "zadna "; // 3
+  s1.V(4);
+}
 
 // tuto funkci pak odnekud zavolejte - vymazte obsah main() a volejte ji
 // tamodtud
