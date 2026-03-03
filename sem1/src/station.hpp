@@ -52,6 +52,7 @@ public:
   }
 
   std::array<std::vector<float>, 12> &averages_all() { return averages_all_; }
+  std::array<float, 12> &averages_by_month() { return averages_by_month_; }
 };
 
 } // namespace chmu

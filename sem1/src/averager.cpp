@@ -31,7 +31,19 @@ void compute_averages_station__serial(Station &station) {
     }
   }
 
-  // not handled monthly averages
+  auto &final_avgs = station.averages_by_month();
+
+  for (size_t i = 0; i < avgs.size(); ++i) {
+    const auto &month = avgs[i];
+    if (month.empty()) {
+      continue;
+    }
+
+    float sum = std::accumulate(month.begin(), month.end(), 0.0f);
+    float avg = sum / month.size();
+
+    final_avgs[i] = avg;
+  }
 }
 
 } // namespace chmu
