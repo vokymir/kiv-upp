@@ -6,6 +6,12 @@
 #include <ranges>
 namespace chmu {
 
+void compute_averages__serial(Stations &stations) {
+  for (auto &st : stations.stations) {
+    compute_averages_station__serial(st);
+  }
+}
+
 void compute_averages_station__serial(Station &station) {
   auto &measurements = station.measurements_const();
   auto &avgs = station.averages_all();
