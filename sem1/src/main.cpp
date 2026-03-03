@@ -58,12 +58,12 @@ void serial_version(const std::string_view &stations_path,
                     const std::string_view &measurements_path) {
   // 0. load data
   std::unique_ptr<chmu::Stations> stations =
-      chmu::load_serial(stations_path, measurements_path);
+      chmu::load__serial(stations_path, measurements_path);
 
   print_info(*stations); // REMOVE
 
   // 1. pre-process data (filtration)
-  chmu::filter_serial(*stations);
+  chmu::filter__serial(*stations);
 
   print_info(*stations); // REMOVE
 

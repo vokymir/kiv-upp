@@ -25,17 +25,17 @@ std::string_view next_field_(std::string_view &s, char delim = ';') {
 }
 
 std::unique_ptr<Stations>
-load_serial(const std::filesystem::path &stations_path,
-            const std::filesystem::path &measurements_path) {
-  std::unique_ptr<Stations> stations = load_stations_serial(stations_path);
+load__serial(const std::filesystem::path &stations_path,
+             const std::filesystem::path &measurements_path) {
+  std::unique_ptr<Stations> stations = load_stations__serial(stations_path);
 
-  load_measurements_serial(measurements_path, *stations);
+  load_measurements__serial(measurements_path, *stations);
 
   return stations;
 }
 
 std::unique_ptr<Stations>
-load_stations_serial(const std::filesystem::path &stations_path) {
+load_stations__serial(const std::filesystem::path &stations_path) {
   std::ifstream file(stations_path);
   if (!file) {
     throw std::runtime_error("Invalid stations path.");
@@ -68,8 +68,8 @@ load_stations_serial(const std::filesystem::path &stations_path) {
   return stations;
 }
 
-void load_measurements_serial(const std::filesystem::path &measurements_path,
-                              Stations &stations) {
+void load_measurements__serial(const std::filesystem::path &measurements_path,
+                               Stations &stations) {
   std::ifstream file(measurements_path);
   if (!file) {
     throw std::runtime_error("Invalid measurements path.");
