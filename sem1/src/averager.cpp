@@ -1,32 +1,34 @@
 #include "averager.hpp"
+#include "measurement.hpp"
+#include <cstddef>
+#include <iterator>
 #include <numeric>
+#include <ranges>
 namespace chmu {
 
 void compute_averages_station__serial(Station &station) {
   auto &measurements = station.measurements_const();
   auto &avgs = station.averages_all();
 
-  float monthly_sum = 0;
-  int month_days = 0;
-  int curr_month = 1;
+  auto month_groups =
+      measurements | std::views::chunk_by([](const auto &a, const auto &b) {
+        return a.civil_date().month_ == b.civil_date().month_;
+      });
 
-  for (const auto &m : measurements) {
-    int month = m.civil_date().month_;
-    if (month != curr_month) {
-      if (month_days != 0) {
-        avgs[curr_month - 1].push_back(monthly_sum / month_days);
-      }
-      monthly_sum = 0;
-      month_days = 0;
-      curr_month = month;
+  for (auto month_view : month_groups) {
+    // get month from first element - doesn't matter
+    int month = month_view.front().civil_date().month_;
+
+    auto values = month_view | std::views::transform([](const Measurement &m) {
+                    return m.value();
+                  });
+
+    float sum = std::accumulate(values.begin(), values.end(), 0.0f);
+    size_t days = std::ranges::distance(values);
+
+    if (days != 0) {
+      avgs[month - 1].push_back(sum / days);
     }
-
-    monthly_sum += m.value();
-    month_days++;
-  }
-  // last month not handled by for-loop
-  if (month_days != 0) {
-    avgs[curr_month - 1].push_back(monthly_sum / month_days);
   }
 
   // not handled monthly averages
