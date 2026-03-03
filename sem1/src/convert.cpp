@@ -38,7 +38,7 @@ constexpr Date civil_from_days(int64_t dayz) {
 }
 
 // theoretically changeable if neccessary
-constexpr int BASE_YEAR = 1990;
+constexpr int BASE_YEAR = 1900;
 constexpr int BASE_MONTH = 1;
 constexpr int BASE_DAY = 1;
 constexpr int64_t BASE_DAYS = days_from_civil(BASE_YEAR, BASE_MONTH, BASE_DAY);
