@@ -29,6 +29,9 @@ public:
   // get/set
   size_t id() const { return id_; }
   std::vector<Measurement> &measurements() { return measurements_; }
+  const std::vector<Measurement> &measurements_const() const {
+    return measurements_;
+  }
 };
 
 } // namespace chmu
