@@ -2,34 +2,34 @@
 
 #include "convert.hpp"
 #include <charconv>
-#include <cstddef>
 #include <string_view>
 namespace chmu {
 
 class Measurement {
+  // all are const by design
 private:
-  size_t date_;
-  float value_;
+  // duplicate dates - civil useful for averages, date useful for filtering
+  // because they are duplicates, marked const to be immutable
+  const Date civil_date_;
+  const size_t date_;
+
+  const float value_;
 
 public:
   Measurement(const std::string_view &year_sv, const std::string_view &month_sv,
-              const std::string_view &day_sv,
-              const std::string_view &value_sv) {
+              const std::string_view &day_sv, const std::string_view &value_sv)
+      : civil_date_(year_sv, month_sv, day_sv),
+        date_(Date::from_date(civil_date_)), value_([&value_sv]() {
+          float v = 0;
+          std::from_chars(value_sv.data(), value_sv.data() + value_sv.size(),
+                          v);
+          return v;
+        }()) {}
 
-    int year = -1;
-    int month = -1;
-    int day = -1;
-    std::from_chars(year_sv.data(), year_sv.data() + year_sv.size(), year);
-    std::from_chars(month_sv.data(), month_sv.data() + month_sv.size(), month);
-    std::from_chars(day_sv.data(), day_sv.data() + day_sv.size(), day);
-
-    date_ = Date::from_date(year, month, day);
-    std::from_chars(value_sv.data(), value_sv.data() + value_sv.size(), value_);
-  }
-
-  // get/set
+  // getters
   size_t date() const { return date_; }
-  int value() const { return value_; }
+  float value() const { return value_; }
+  const Date &civil_date() const { return civil_date_; }
 };
 
 } // namespace chmu
