@@ -9,7 +9,7 @@ namespace chmu {
 class Measurement {
 private:
   size_t date_;
-  int value_;
+  float value_;
 
 public:
   Measurement(const std::string_view &year_sv, const std::string_view &month_sv,
