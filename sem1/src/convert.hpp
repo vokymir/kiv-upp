@@ -12,7 +12,8 @@ struct Date {
 
   Date(int year, int month, int day) : year_(year), month_(month), day_(day) {}
 
-  // get number from date
+  // get number from date - the date is number of days between base date
+  // (1.1.1990) and given date
   static size_t from_date(Date date);
   static size_t from_date(int year, int month, int day);
 
