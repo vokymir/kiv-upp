@@ -69,6 +69,16 @@ bool should_keep_station(const Station &st) {
   return have_enough_values_on_average(mes) && have_enough_continuous_data(mes);
 }
 
-void filter_serial(Stations &stations) {}
+void filter_serial(Stations &stations) {
+  // mark all stations which should be deleted
+  for (const auto &st : stations.stations) {
+    if (!should_keep_station(st)) {
+      stations.del_station(st.id());
+    }
+  }
+
+  // remove them from memory
+  stations.cleanup();
+}
 
 } // namespace chmu
