@@ -50,6 +50,8 @@ public:
   const std::vector<Fluctuation> &fluctuations_const() const {
     return fluctuations_;
   }
+
+  std::array<std::vector<float>, 12> &averages_all() { return averages_all_; }
 };
 
 } // namespace chmu
