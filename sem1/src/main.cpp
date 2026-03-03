@@ -1,3 +1,4 @@
+#include "filter.hpp"
 #include "loader.hpp"
 #include "stations.hpp"
 #include <exception>
@@ -49,13 +50,22 @@ void load_args(int argc, char **argv, std::string &stations_path,
   }
 }
 
+void print_info(const chmu::Stations &sts) {
+  std::print("Stations: {}\n", sts.stations.size());
+}
+
 void serial_version(const std::string_view &stations_path,
                     const std::string_view &measurements_path) {
   // 0. load data
   std::unique_ptr<chmu::Stations> stations =
       chmu::load_serial(stations_path, measurements_path);
 
+  print_info(*stations); // REMOVE
+
   // 1. pre-process data (filtration)
+  chmu::filter_serial(*stations);
+
+  print_info(*stations); // REMOVE
 
   // 2. identify fluctuation
 
