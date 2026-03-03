@@ -1,6 +1,7 @@
 #pragma once
 
 #include "measurement.hpp"
+#include <array>
 #include <charconv>
 #include <cstddef>
 #include <string>
@@ -8,13 +9,25 @@
 #include <vector>
 namespace chmu {
 
+// all fluctuation are linked to some station.
+// stores month, year and temperature difference as specified in assignment
+struct Fluctuation {
+  int month;
+  int year;
+  float temp_diff;
+};
+
 class Station {
 private:
   size_t id_;
   std::string name_;
   float lat_;
   float lon_;
+
   std::vector<Measurement> measurements_;
+  std::vector<Fluctuation> fluctuations_;
+  std::array<std::vector<float>, 12> averages_all_;
+  std::array<float, 12> averages_by_month_;
 
 public:
   Station(const std::string_view &id, const std::string_view &name,
@@ -31,6 +44,11 @@ public:
   std::vector<Measurement> &measurements() { return measurements_; }
   const std::vector<Measurement> &measurements_const() const {
     return measurements_;
+  }
+
+  std::vector<Fluctuation> &fluctuations() { return fluctuations_; }
+  const std::vector<Fluctuation> &fluctuations_const() const {
+    return fluctuations_;
   }
 };
 
