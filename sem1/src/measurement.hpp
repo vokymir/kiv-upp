@@ -26,6 +26,10 @@ public:
     date_ = Date::from_date(year, month, day);
     std::from_chars(value_sv.data(), value_sv.data() + value_sv.size(), value_);
   }
+
+  // get/set
+  size_t date() const { return date_; }
+  int value() const { return value_; }
 };
 
 } // namespace chmu
