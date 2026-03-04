@@ -26,6 +26,7 @@ private:
 
   std::vector<Measurement> measurements_;
   std::vector<Fluctuation> fluctuations_;
+  std::array<std::vector<int>, 12> averages_all_years_;
   std::array<std::vector<float>, 12> averages_all_;
   std::array<float, 12> averages_by_month_;
 
@@ -51,7 +52,8 @@ public:
     return fluctuations_;
   }
 
-  std::array<std::vector<float>, 12> &averages_all() { return averages_all_; }
+  auto &averages_all() { return averages_all_; }
+  auto &averages_all_years() { return averages_all_years_; }
   std::array<float, 12> &averages_by_month() { return averages_by_month_; }
 };
 

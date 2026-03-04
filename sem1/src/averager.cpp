@@ -15,6 +15,7 @@ void compute_averages__serial(Stations &stations) {
 void compute_averages_station__serial(Station &station) {
   auto &measurements = station.measurements_const();
   auto &avgs = station.averages_all();
+  auto &avgs_year = station.averages_all_years();
 
   auto month_groups =
       measurements | std::views::chunk_by([](const auto &a, const auto &b) {
@@ -23,7 +24,9 @@ void compute_averages_station__serial(Station &station) {
 
   for (auto month_view : month_groups) {
     // get month from first element - doesn't matter
-    int month = month_view.front().civil_date().month_;
+    auto date = month_view.front().civil_date();
+    int month = date.month_;
+    int year = date.year_;
 
     auto values = month_view | std::views::transform([](const Measurement &m) {
                     return m.value();
@@ -34,6 +37,7 @@ void compute_averages_station__serial(Station &station) {
 
     if (days != 0) {
       avgs[month - 1].push_back(sum / days);
+      avgs_year[month - 1].push_back(year);
     }
   }
 
