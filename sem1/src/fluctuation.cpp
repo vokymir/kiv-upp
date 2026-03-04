@@ -5,6 +5,7 @@
 #include <cassert>
 #include <cstddef>
 #include <cstdlib>
+#include <ranges>
 #include <vector>
 namespace chmu {
 
@@ -29,16 +30,17 @@ void identify_fluctuation_station_month__serial(Station &station,
   float threshold = (max_val - min_val) * 0.75;
 
   // === find fluctuations
-  for (size_t i = 1; i < averages.size(); ++i) {
-    float prev_avg = averages[i - 1];
-    float curr_avg = averages[i];
+  for (const auto &[prev, curr] :
+       std::views::zip(averages, years) | std::views::adjacent<2>) {
+    const auto &[prev_avg, _] = prev;
+    const auto &[curr_avg, curr_year] = curr;
 
     auto diff = std::abs(prev_avg - curr_avg);
     if (diff <= threshold) {
       continue;
     }
 
-    flucs.emplace_back(month_id, years[i], diff);
+    flucs.emplace_back(month_id, curr_year, diff);
   }
 }
 
