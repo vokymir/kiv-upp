@@ -1,4 +1,6 @@
+#include "averager.hpp"
 #include "filter.hpp"
+#include "fluctuation.hpp"
 #include "loader.hpp"
 #include "stations.hpp"
 #include <exception>
@@ -60,16 +62,16 @@ void serial_version(const std::string_view &stations_path,
   std::unique_ptr<chmu::Stations> stations =
       chmu::load__serial(stations_path, measurements_path);
 
-  print_info(*stations); // REMOVE
-
   // 1. pre-process data (filtration)
   chmu::filter__serial(*stations);
 
-  print_info(*stations); // REMOVE
+  // 3. calculate averages
+
+  chmu::compute_averages__serial(*stations);
 
   // 2. identify fluctuation
 
-  // 3. calculate averages
+  chmu::identify_fluctuation__serial(*stations);
 
   // 4. draw a map for each month
 
