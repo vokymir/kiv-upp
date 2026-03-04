@@ -50,8 +50,8 @@ void identify_fluctuation_station__serial(Station &station) {
   }
 }
 
-void identify_fluctuation__serial(Stations *stations) {
-  for (auto &st : stations->stations) {
+void identify_fluctuation__serial(Stations &stations) {
+  for (auto &st : stations.stations) {
     identify_fluctuation_station__serial(st);
   }
 }
