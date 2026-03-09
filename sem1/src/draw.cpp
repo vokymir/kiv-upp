@@ -56,7 +56,7 @@ void write_svg_month__serial(const std::vector<Point> &points,
   file << svg;
 
   for (const auto &p : points) {
-    file << std::format("<circle cx=\"{}\" cy=\"{}\" r=\"5\" fill=\"{}\"", p.x,
+    file << std::format("<circle cx=\"{}\" cy=\"{}\" r=\"5\" fill=\"{}\">", p.x,
                         p.y, p.color_code);
   }
 
