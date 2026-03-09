@@ -19,9 +19,12 @@ private:
   // pocitadlo procesu
   int mCounter;
   // odpocet vlaken uvnitr
-  volatile int mLeft_counter; // volatile - viz vyse
-  // je bariera signalizovana?
-  volatile bool mSignalized; // volatile - viz vyse
+  int mLeft_counter; // je bariera signalizovana?
+  bool mSignalized;
+
+  std::condition_variable left_cv;
+  std::condition_variable signal_cv;
+
   // synchronizacni zamek
   std::mutex mLock;
 
@@ -36,11 +39,8 @@ public:
     std::unique_lock<std::mutex> lck(mLock);
 
     if (mCounter == mInitial) {
-      lck.unlock();
-      // aktivni cekani!!!
-      while (mLeft_counter != 0)
-        ;
-      lck.lock();
+      left_cv.wait(lck, [&]() { return mLeft_counter == 0; });
+
       mSignalized = false;
     }
 
@@ -49,17 +49,15 @@ public:
       mLeft_counter = mInitial;
       mCounter = mInitial;
       mSignalized = true;
+      signal_cv.notify_all();
     }
 
-    lck.unlock();
-
-    // aktivni cekani!!!
-    while (!mSignalized)
-      ;
-
-    lck.lock();
+    signal_cv.wait(lck, [&]() { return mSignalized; });
 
     mLeft_counter--;
+    if (mLeft_counter == 0) {
+      left_cv.notify_all();
+    }
   }
 };
 
