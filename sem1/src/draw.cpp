@@ -51,16 +51,18 @@ void write_svg_month__serial(const std::vector<Point> &points,
                       std::istreambuf_iterator<char>());
   }
 
+  auto pos = svg.find("</svg>");
+
   // write to file
   std::ofstream file(month_names[month] + ".svg");
-  file << svg;
+  file << svg.substr(0, pos);
 
   for (const auto &p : points) {
     file << std::format("<circle cx=\"{}\" cy=\"{}\" r=\"5\" fill=\"{}\"/>\n",
                         p.x, p.y, p.color_code);
   }
 
-  file << "</svg>";
+  file << svg.substr(pos);
 }
 
 Temperature_Range get_temperature_range(const Stations &stations) {
