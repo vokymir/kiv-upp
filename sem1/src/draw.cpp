@@ -89,8 +89,8 @@ void Point::put(float lat, float lon) {
   constexpr float lon_max = 18.866923511078615f; // bottom right
   constexpr float lon_min = 12.10220905426906f;  // upper left
 
-  constexpr float width = 5338;  // hardcoded from SVG
-  constexpr float height = 3056; // also
+  constexpr float width = 1412; // hardcoded from SVG (viewBox)
+  constexpr float height = 809; // also
 
   x = (lon - lon_min) / (lon_max - lon_min) * width;
   y = (lat_max - lat) / (lat_max - lat_min) * height;
