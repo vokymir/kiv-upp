@@ -65,6 +65,8 @@ public:
 
   // get/set
   size_t id() const { return id_; }
+  float lat() const { return lat_; }
+  float lon() const { return lon_; }
   std::vector<Measurement> &measurements() { return measurements_; }
   const std::vector<Measurement> &measurements_const() const {
     return measurements_;
@@ -77,6 +79,9 @@ public:
 
   auto &averages() { return averages_; }
   std::array<float, 12> &averages_by_month() { return averages_by_month_; }
+  const std::array<float, 12> &averages_by_month_const() const {
+    return averages_by_month_;
+  }
 };
 
 } // namespace chmu
