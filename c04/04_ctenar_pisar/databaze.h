@@ -2,7 +2,7 @@
 
 #include <vector>
 
-constexpr size_t Velikost_Databaze = 100'000;
+constexpr size_t Velikost_Databaze = 1'000'000;
 
 inline constexpr long long Spravny_Soucet() {
   long long sum = 0;

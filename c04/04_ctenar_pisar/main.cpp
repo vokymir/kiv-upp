@@ -4,6 +4,7 @@
 #include <iostream>
 #include <mutex>
 #include <random>
+#include <shared_mutex>
 #include <thread>
 #include <vector>
 
@@ -11,12 +12,14 @@
 
 /* 1) zamknout pomoci exclusive mutex
  * 2) zapiste si casy
- *      Ctenar: ___ us
- *      Pisar:  ___ us
+ *      Ctenar: 1'940'661 us
+ *      Pisar:  8'782'629 us
  * 3) vymyslete efektivnejsi zpusob
  * 4) zapiste casy po optimalizaci
- *      Ctenar: ___ us
- *      Pisar:  ___ us
+ *      Ctenar: 1'618'013 us
+ *      Pisar:  5'767'884 us
+ *
+ *  (Pro zajimavost jsem zvetsil velikost DB 10x)
  *
  * +) hinty:
  *    - nejjednodussi = preference ctenaru
@@ -34,6 +37,9 @@ std::atomic<size_t> Pocet_Chyb = 0;
 std::array<size_t, Pocet_Ctenaru> Casy_Ctenari;
 std::array<size_t, Pocet_Pisaru> Casy_Pisari;
 
+// std::mutex exclusive_mutex;
+std::shared_mutex shared_mutex;
+
 /*
  * Vlaknova funkce ctenare - cte z databaze, overuje, ze soucet hodnot je stale
  * 120
@@ -48,6 +54,9 @@ void ctenar(size_t idx, Database &db) {
   for (size_t i = 0; i < Pocet_Operaci; i++) {
     // pockame nahodnou dobu
     std::this_thread::sleep_for(std::chrono::milliseconds(dis(gen)));
+
+    // std::lock_guard<std::mutex> lck(exclusive_mutex);
+    shared_mutex.lock_shared();
 
     // zmerime cas cteni
     auto start = std::chrono::high_resolution_clock::now();
@@ -67,6 +76,8 @@ void ctenar(size_t idx, Database &db) {
     if (sum != Spravny_Soucet()) {
       Pocet_Chyb++;
     }
+
+    shared_mutex.unlock_shared();
   }
 }
 
@@ -84,6 +95,9 @@ void pisar(size_t idx, Database &db) {
   for (size_t i = 0; i < Pocet_Operaci; i++) {
     // pockame nahodnou dobu
     std::this_thread::sleep_for(std::chrono::milliseconds(dis(gen)));
+
+    // std::lock_guard<std::mutex> lck(exclusive_mutex);
+    shared_mutex.lock();
 
     // zmerime cas zapisu
     auto start = std::chrono::high_resolution_clock::now();
@@ -105,6 +119,8 @@ void pisar(size_t idx, Database &db) {
 
     // = tohle znamena, ze po zasahu pisare se obsah DB nezmeni (v idealnim
     // pripade)
+
+    shared_mutex.unlock();
   }
 }
 
