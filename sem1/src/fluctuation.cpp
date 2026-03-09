@@ -30,6 +30,10 @@ void identify_fluctuation_station_month__serial(Station &station,
   float threshold = (max_val - min_val) * 0.75;
 
   // === find fluctuations
+  // WARN: important assumption: averages are sorted by year
+  // that relies on measurements being sorted and no bad operation in between
+  // (This is not checked nor ensured anywhere, just assumed the given data are
+  // nice.)
   for (const auto &[prev, curr] : averages | std::views::adjacent<2>) {
     auto diff = std::abs(prev.average - curr.average);
     if (diff <= threshold) {
