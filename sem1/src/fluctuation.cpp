@@ -12,35 +12,31 @@ namespace chmu {
 void identify_fluctuation_station_month__serial(Station &station,
                                                 int month_id) {
   int month_idx = month_id - 1;
-  std::vector<float> &averages = station.averages_all()[month_idx];
-  std::vector<int> &years = station.averages_all_years()[month_idx];
+  auto &averages = station.averages()[month_idx].averages; // :)
   std::vector<Fluctuation> &flucs = station.fluctuations();
+
   if (averages.empty()) {
     return;
   }
-  assert(averages.size() == years.size() &&
-         "Those are monthly averages so there must be corresponding year for "
-         "them.");
 
   // === find threshold
-  auto [min_it, max_it] = std::ranges::minmax_element(averages);
-  float min_val = *min_it;
-  float max_val = *max_it;
+  auto [min_it, max_it] = std::ranges::minmax_element(
+      averages, [](const auto &obj1, const auto &obj2) {
+        return obj1.average > obj2.average;
+      });
+  float min_val = min_it->average;
+  float max_val = max_it->average;
 
   float threshold = (max_val - min_val) * 0.75;
 
   // === find fluctuations
-  for (const auto &[prev, curr] :
-       std::views::zip(averages, years) | std::views::adjacent<2>) {
-    const auto &[prev_avg, _] = prev;
-    const auto &[curr_avg, curr_year] = curr;
-
-    auto diff = std::abs(prev_avg - curr_avg);
+  for (const auto &[prev, curr] : averages | std::views::adjacent<2>) {
+    auto diff = std::abs(prev.average - curr.average);
     if (diff <= threshold) {
       continue;
     }
 
-    flucs.emplace_back(month_id, curr_year, diff);
+    flucs.emplace_back(month_id, curr.year, diff);
   }
 }
 
