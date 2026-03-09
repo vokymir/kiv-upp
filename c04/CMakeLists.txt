@@ -6,6 +6,9 @@ PROJECT(upp_04)
 
 SET(CMAKE_CXX_STANDARD 20)
 
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
+set(CMAKE_BUILD_TYPE Release)
+
 FILE(GLOB_RECURSE 01_prodcons_src 01_prodcons/*.cpp 01_prodcons/*.h)
 FILE(GLOB_RECURSE 02_barrier_src 02_barrier/*.cpp 02_barrier/*.h)
 FILE(GLOB_RECURSE 03_atomic_src 03_atomic/*.cpp 03_atomic/*.h)
