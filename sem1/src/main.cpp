@@ -1,5 +1,6 @@
 #include "averager.hpp"
 #include "csv.hpp"
+#include "draw.hpp"
 #include "filter.hpp"
 #include "fluctuation.hpp"
 #include "loader.hpp"
@@ -97,6 +98,8 @@ void serial_version(const std::string_view &stations_path,
   timer.lap("Fluctuations identified.");
 
   // F) draw a map for each month [4]
+  chmu::draw_svg__serial(*stations);
+  timer.lap("Draw SVG maps.");
 
   // G) create a CSV output file [5]
   chmu::write_csv__serial(*stations);
