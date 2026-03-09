@@ -17,18 +17,41 @@ struct Fluctuation {
   float temp_diff;
 };
 
+// storage for one monthly average value - store the value and year
+struct Monthly_Average {
+  float average;
+  int year;
+};
+
+// storage for all averages in one month across multiple years
+struct Monthly_Averages {
+  std::vector<Monthly_Average> averages;
+
+  // add one average record
+  void add(float avg, int year) { averages.push_back({avg, year}); }
+};
+
 class Station {
 private:
+  // information about the station itself
   size_t id_;
   std::string name_;
   float lat_;
   float lon_;
 
+  // here are stored all measurements which are loaded from the file
   std::vector<Measurement> measurements_;
-  std::vector<Fluctuation> fluctuations_;
-  std::array<std::vector<int>, 12> averages_all_years_;
-  std::array<std::vector<float>, 12> averages_all_;
+
+  // here are stored all monthly averages for all months across all years in
+  // measurements - these are computed after the original file was closed
+  std::array<Monthly_Averages, 12> averages_;
+
+  // one average value for every month - this is a mere storage, calculated from
+  // averages_
   std::array<float, 12> averages_by_month_;
+
+  // storage for all fluctuations
+  std::vector<Fluctuation> fluctuations_;
 
 public:
   Station(const std::string_view &id, const std::string_view &name,
@@ -52,8 +75,7 @@ public:
     return fluctuations_;
   }
 
-  auto &averages_all() { return averages_all_; }
-  auto &averages_all_years() { return averages_all_years_; }
+  auto &averages() { return averages_; }
   std::array<float, 12> &averages_by_month() { return averages_by_month_; }
 };
 

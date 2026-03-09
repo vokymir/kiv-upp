@@ -1,5 +1,6 @@
 #include "averager.hpp"
 #include "measurement.hpp"
+#include "station.hpp"
 #include <cstddef>
 #include <iterator>
 #include <numeric>
@@ -13,10 +14,14 @@ void compute_averages__serial(Stations &stations) {
 }
 
 void compute_averages_station__serial(Station &station) {
-  auto &measurements = station.measurements_const();
-  auto &avgs = station.averages_all();
-  auto &avgs_year = station.averages_all_years();
+  compute_averages__serial(station);
+}
 
+void compute_averages__serial(Station &station) {
+  auto &measurements = station.measurements_const();
+  auto &avgs = station.averages();
+
+  // group measurements by month
   auto month_groups =
       measurements | std::views::chunk_by([](const auto &a, const auto &b) {
         return a.civil_date().month_ == b.civil_date().month_;
@@ -28,6 +33,7 @@ void compute_averages_station__serial(Station &station) {
     int month = date.month_;
     int year = date.year_;
 
+    // get values out of month across all years
     auto values = month_view | std::views::transform([](const Measurement &m) {
                     return m.value();
                   });
@@ -36,20 +42,28 @@ void compute_averages_station__serial(Station &station) {
     size_t days = std::ranges::distance(values);
 
     if (days != 0) {
-      avgs[month - 1].push_back(sum / days);
-      avgs_year[month - 1].push_back(year);
+      float avg = sum / days;
+
+      avgs[month - 1].add(avg, year);
     }
   }
+}
+
+void compute_monthly_averages__serial(Station &station) {
+  auto &avgs = station.averages();
 
   auto &final_avgs = station.averages_by_month();
 
   for (size_t i = 0; i < avgs.size(); ++i) {
-    const auto &month = avgs[i];
+    const auto &month = avgs[i].averages;
     if (month.empty()) {
       continue;
     }
 
-    float sum = std::accumulate(month.begin(), month.end(), 0.0f);
+    float sum = std::accumulate(month.begin(), month.end(), 0.0f,
+                                [](const auto &sum, const auto &record) {
+                                  return sum + record.average;
+                                });
     float avg = sum / month.size();
 
     final_avgs[i] = avg;
