@@ -22,7 +22,7 @@ void identify_fluctuation_station_month__serial(Station &station,
   // === find threshold
   auto [min_it, max_it] = std::ranges::minmax_element(
       averages, [](const auto &obj1, const auto &obj2) {
-        return obj1.average > obj2.average;
+        return obj1.average < obj2.average;
       });
   float min_val = min_it->average;
   float max_val = max_it->average;
