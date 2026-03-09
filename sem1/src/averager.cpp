@@ -14,10 +14,6 @@ void compute_averages__serial(Stations &stations) {
 }
 
 void compute_averages_station__serial(Station &station) {
-  compute_averages__serial(station);
-}
-
-void compute_averages__serial(Station &station) {
   auto &measurements = station.measurements_const();
   auto &avgs = station.averages();
 
@@ -49,7 +45,13 @@ void compute_averages__serial(Station &station) {
   }
 }
 
-void compute_monthly_averages__serial(Station &station) {
+void compute_monthly_averages__serial(Stations &stations) {
+  for (auto &st : stations.stations) {
+    compute_monthly_averages_station__serial(st);
+  }
+}
+
+void compute_monthly_averages_station__serial(Station &station) {
   auto &avgs = station.averages();
 
   auto &final_avgs = station.averages_by_month();

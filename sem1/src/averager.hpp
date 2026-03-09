@@ -4,18 +4,20 @@
 #include "stations.hpp"
 namespace chmu {
 
-// compute all and monthly averages for all stations
-void compute_averages__serial(Stations &stations);
+// ===== LOOK OUT =====
+// => produces averages_ inside station(s)
 
-// compute all and monthly averages for one station
-void compute_averages_station__serial(Station &station);
+// compute all averages for all stations
+void compute_averages__serial(Stations &stations);
 
 // find & store all averages grouped by month across all years
 // => fill averages_
-void compute_averages__serial(Station &station);
+void compute_averages_station__serial(Station &station);
 
-// calculate the average for all months across years
+// ===== WARN =====
 // => depends on averages_
-void compute_monthly_averages__serial(Station &station);
+
+void compute_monthly_averages__serial(Stations &stations);
+void compute_monthly_averages_station__serial(Station &station);
 
 } // namespace chmu
