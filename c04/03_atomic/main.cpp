@@ -32,7 +32,7 @@ public:
 
 // (1) nezamykano, nechraneno - vysledek bude spatny, ale nejrychleji (to je
 // zradne!)
-int sum;
+// int sum;
 // (2) nezamykano, nechraneno, volatilni pamet - vysledek bude spatny, o neco
 // pomalejsi, ale stale docela rychly
 // volatile int sum;
@@ -40,7 +40,7 @@ int sum;
 // LockableInt sum;
 // (4) nezamykano, ale zajistena atomicita (CAS, LL/SC, ...) - spravny vysledek;
 // proc je ale casto pomalejsi nez (3)?
-// std::atomic<int> sum;
+std::atomic<int> sum;
 
 void Summator(size_t start, size_t end) {
   // pochopitelne lepsi reseni je zavest lokalni soucet a ten az pozdeji pricist
