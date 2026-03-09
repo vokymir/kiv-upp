@@ -74,26 +74,30 @@ void serial_version(const std::string_view &stations_path,
                     const std::string_view &measurements_path) {
   Timer timer;
 
-  // 0. load data
+  // A) load data
   std::unique_ptr<chmu::Stations> stations =
       chmu::load__serial(stations_path, measurements_path);
   timer.lap("Data loaded.");
 
-  // 1. pre-process data (filtration)
+  // B) pre-process data (=filtration) [1]
   chmu::filter__serial(*stations);
   timer.lap("Data filtered.");
 
-  // 3. calculate averages
+  // C) calculate averages
   chmu::compute_averages__serial(*stations);
   timer.lap("Averages computed.");
 
-  // 2. identify fluctuation
+  // D) calculate monthly averages [3]
+  chmu::compute_monthly_averages__serial(*stations);
+  timer.lap("Monthly averages computed.");
+
+  // E) identify fluctuation [2]
   chmu::identify_fluctuation__serial(*stations);
   timer.lap("Fluctuations identified.");
 
-  // 4. draw a map for each month
+  // F) draw a map for each month [4]
 
-  // 5. create a CSV output file
+  // G) create a CSV output file [5]
 }
 
 void parallel_version(const std::string_view &stations_path,
