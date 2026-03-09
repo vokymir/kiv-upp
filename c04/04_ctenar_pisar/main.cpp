@@ -9,6 +9,21 @@
 
 #include "databaze.h"
 
+/* 1) zamknout pomoci exclusive mutex
+ * 2) zapiste si casy
+ *      Ctenar: ___ us
+ *      Pisar:  ___ us
+ * 3) vymyslete efektivnejsi zpusob
+ * 4) zapiste casy po optimalizaci
+ *      Ctenar: ___ us
+ *      Pisar:  ___ us
+ *
+ * +) hinty:
+ *    - nejjednodussi = preference ctenaru
+ *       - citac + podminkova promenna
+ *    - nepovinne: c++ ma shared_lock a unique_lock
+ * */
+
 constexpr size_t Pocet_Ctenaru = 24;
 constexpr size_t Pocet_Pisaru = 4;
 
