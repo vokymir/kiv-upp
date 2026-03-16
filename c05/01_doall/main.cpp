@@ -66,9 +66,9 @@ int main(int argc, char **argv) {
   // (1) seriova verze
   // double res = perform_serial(m1, m2);
   // (2) paralelni verze se statickym rozdelenim prace
-  double res = perform_parallel_static(m1, m2);
+  // double res = perform_parallel_static(m1, m2);
   // (3) paralelni verze s dynamickym delenim prace
-  // double res = perform_parallel_dynamic(m1, m2);
+  double res = perform_parallel_dynamic(m1, m2);
 
   auto t2 = std::chrono::steady_clock::now();
 
