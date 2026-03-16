@@ -1,0 +1,9 @@
+CMAKE_MINIMUM_REQUIRED(VERSION 3.0)
+
+PROJECT(upp_05_dcv)
+
+SET(CMAKE_CXX_STANDARD 20)
+
+FILE(GLOB 04_homework_src *.cpp *.h)
+
+ADD_EXECUTABLE(04_homework ${04_homework_src})
