@@ -48,8 +48,8 @@ int main(int argc, char **argv) {
   Matrix m1, m2;
 
   // nacteni dvou matic
-  if (!Load_Matrix(m1, "matrix1.txt", 200, 200) ||
-      !Load_Matrix(m2, "matrix2.txt", 200, 200)) {
+  if (!Load_Matrix(m1, "./01_doall/matrix1.txt", 200, 200) ||
+      !Load_Matrix(m2, "./01_doall/matrix2.txt", 200, 200)) {
     std::cerr << "Chyba pri nacitani matic: nelze najit matrix1.txt a/nebo "
                  "matrix2.txt"
               << std::endl;
