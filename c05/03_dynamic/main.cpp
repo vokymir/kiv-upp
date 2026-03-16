@@ -9,7 +9,7 @@ int main(int argc, char **argv) {
 
   farmer.Set_Source_File("./03_dynamic/words.txt");
 
-  farmer.Set_Word_Length_Limit(14);
+  farmer.Set_Word_Length_Limit(13);
 
   farmer.Add_Search_Word("para");
   farmer.Add_Search_Word("spin");

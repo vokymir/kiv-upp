@@ -25,10 +25,11 @@ void CWord_Worker::_Run() {
 void CWord_Worker::Work(const TWork_Item &item) {
   // lambda funkce - vyzkousi permutaci, zda vyhovuje (obsahuje nektere z
   // podslov); pokud ano, oznami vysledek a vraci true
-  auto try_permutation = [&](const std::string &str) -> bool {
+  auto try_permutation = [&](const std::string &orig_str,
+                             const std::string &str) -> bool {
     for (auto &s : mSearch_Words) {
       if (str.find(s) != std::string::npos) {
-        mChannel.Store_Result({item.word, str, s});
+        mChannel.Store_Result({orig_str, str, s});
         return true;
       }
     }
@@ -36,18 +37,20 @@ void CWord_Worker::Work(const TWork_Item &item) {
     return false;
   };
 
-  std::string tmp = item.word;
+  for (const auto &the_word : item.words) {
+    std::string tmp = the_word;
 
-  std::vector<int> c(tmp.size());
-  std::fill(c.begin(), c.end(), 0);
+    std::vector<int> c(tmp.size());
+    std::fill(c.begin(), c.end(), 0);
 
-  // musime zkusit i zakladni slovo (0. permutace)
-  if (try_permutation(tmp))
-    return;
+    // musime zkusit i zakladni slovo (0. permutace)
+    if (try_permutation(the_word, tmp))
+      return;
 
-  // vyzkousime vsechny permutace (pozor, potencialne faktorialni slozitost)
-  while (std::next_permutation(tmp.begin(), tmp.end())) {
-    if (try_permutation(tmp))
-      break;
+    // vyzkousime vsechny permutace (pozor, potencialne faktorialni slozitost)
+    while (std::next_permutation(tmp.begin(), tmp.end())) {
+      if (try_permutation(the_word, tmp))
+        break;
+    }
   }
 }

@@ -1,4 +1,5 @@
 #include "farmer.h"
+#include "work.h"
 
 #include <fstream>
 #include <iostream>
@@ -26,18 +27,22 @@ void CWord_Farmer::Run() {
 
     // TODO: pridelovat praci po jednom slovu... neni to nahodou trochu
     // synchronizacni overkill? => zavedte granularitu prideleni prace
-    TWork_Item item{""};
-    do {
-      // precteme slovo
-      if (!std::getline(words, item.word))
-        break;
+    TWork_Item item{{}};
+    for (int i = 0; i < CWork_Channel::GRANULARITY; ++i) {
+      std::string word;
+      do {
+        // precteme slovo
+        if (!std::getline(words, word))
+          break;
 
-      // dokud nejake slovo je, popr. do doby nez nacteme takove, ktere ma
-      // "dovoleny" pocet znaku
-    } while (item.word.size() > mWord_Len_Limit);
+        // dokud nejake slovo je, popr. do doby nez nacteme takove, ktere ma
+        // "dovoleny" pocet znaku
+      } while (item.words.size() > mWord_Len_Limit);
+      item.words.push_back(word);
+    }
 
     // kdyz dojdeme na konec souboru...
-    if (words.eof() || words.bad() || item.word.empty())
+    if (words.eof() || words.bad() || item.words.empty())
       break;
 
     // nabidneme praci - od momentu, kdy jsme se odblokovali z Wait_For_Request

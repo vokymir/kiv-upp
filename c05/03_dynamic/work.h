@@ -1,13 +1,15 @@
 #pragma once
 
 #include <condition_variable>
+#include <cstddef>
 #include <list>
 #include <mutex>
 #include <thread>
+#include <vector>
 
 // jednotka prace - zadane slovo
 struct TWork_Item {
-  std::string word;
+  std::vector<std::string> words;
 };
 
 // jednotka vysledku - nalezene podslovo v permutaci
@@ -47,6 +49,7 @@ private:
   std::list<TWork_Result> mResults;
 
 public:
+  constexpr static size_t GRANULARITY = 1;
   // farmer ceka na request o praci
   bool Wait_For_Request();
 
