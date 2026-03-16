@@ -7,7 +7,7 @@ int main(int argc, char **argv) {
   // podslova
   CWord_Farmer farmer;
 
-  farmer.Set_Source_File("words.txt");
+  farmer.Set_Source_File("./03_dynamic/words.txt");
 
   farmer.Set_Word_Length_Limit(14);
 
