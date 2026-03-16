@@ -5,7 +5,10 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <queue>
 #include <string>
+#include <thread>
+#include <utility>
 #include <vector>
 
 // velikost obrazku MNIST datove sady
@@ -166,37 +169,136 @@ int main(int argc, char **argv) {
    * jakmile bude dokoncena, spusti svou praci
    */
 
+  std::queue<std::pair<int, std::vector<unsigned char>>> data_loaded{};
+  bool all_data_loaded = false;
+  std::queue<std::pair<int, std::vector<unsigned char>>> data_transformed{};
+  bool all_data_transformed = false;
+  std::queue<std::pair<int, std::vector<std::vector<bool>>>> data_binarized{};
+  bool all_data_binarized = false;
+  std::queue<std::pair<int, int>> data_labeled{};
+  bool all_data_labeled = false;
+
   auto tp_start = std::chrono::steady_clock::now();
 
   int total = 0;
   int correct = 0;
 
-  for (int num = 0; num <= 9; num++) {
-    for (auto d :
-         std::filesystem::directory_iterator("mnist/" + std::to_string(num))) {
-      // jen bmp soubory
-      if (d.path().extension() != ".bmp") {
+  int dumb_counter1 = 0;
+  int dumb_counter2 = 0;
+  std::thread t_loading([&]() {
+    for (int num = 0; num <= 9; ++num) {
+      for (auto d : std::filesystem::directory_iterator("mnist/" +
+                                                        std::to_string(num))) {
+        if (d.path().extension() != ".bmp") {
+          continue;
+        }
+        auto data = Load_BMP(d.path().string());
+
+        data_loaded.push({num, data});
+        dumb_counter1++;
+      }
+    }
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    all_data_loaded = true;
+    std::cout << "All data loaded." << std::endl;
+  });
+
+  std::thread t_transform([&]() {
+    while (!all_data_loaded || !data_loaded.empty()) {
+      if (data_loaded.empty()) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
         continue;
       }
+      auto [num, data] = data_loaded.front();
+      data_loaded.pop();
 
-      // 1) nacist obrazek
-      auto data = Load_BMP(d.path().string());
-
-      // 2) transformovat jej
       Transform(data);
 
-      // 3) zprahovat do binarniho vektoru
-      const auto binarized = Binarize(data);
+      data_transformed.push({num, data});
+      dumb_counter2++;
+    }
 
-      // 4) klasifikovat
-      const int label = Classify(binarized);
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    all_data_transformed = true;
+    std::cout << "All data transformed." << std::endl;
+  });
 
-      // 5) porovnat s ocekavanym cislem
+  std::thread t_binarize([&]() {
+    while (!all_data_transformed || !data_transformed.empty()) {
+      if (data_transformed.empty()) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        continue;
+      }
+      auto [num, data] = data_transformed.front();
+      data_transformed.pop();
+
+      auto binarized = Binarize(data);
+
+      data_binarized.push({num, binarized});
+    }
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    all_data_binarized = true;
+    std::cout << "All data binarized." << std::endl;
+  });
+
+  std::thread t_label([&]() {
+    while (!all_data_binarized || !data_binarized.empty()) {
+      if (data_binarized.empty()) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        continue;
+      }
+      auto [num, data] = data_binarized.front();
+      data_binarized.pop();
+
+      auto label = Classify(data);
+
+      data_labeled.push({num, label});
+    }
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    all_data_labeled = true;
+    std::cout << "All data labeled." << std::endl;
+  });
+
+  std::thread t_comp([&]() {
+    while (!all_data_labeled || !data_labeled.empty()) {
+      if (data_labeled.empty()) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        continue;
+      }
+      auto [num, label] = data_labeled.front();
+      data_labeled.pop();
+
       if (label == num) {
         correct++;
       }
       total++;
     }
+
+    std::cout << "All data compared." << std::endl;
+  });
+
+  if (t_loading.joinable()) {
+    t_loading.join();
+    std::cout << "Thread joined: LOAD" << std::endl;
+  }
+  if (t_transform.joinable()) {
+    t_transform.join();
+    std::cout << "Thread joined: TRANSFORM" << std::endl;
+  }
+  if (t_binarize.joinable()) {
+    t_binarize.join();
+    std::cout << "Thread joined: BINARIZE" << std::endl;
+  }
+  if (t_label.joinable()) {
+    t_label.join();
+    std::cout << "Thread joined: LABEL" << std::endl;
+  }
+  if (t_comp.joinable()) {
+    t_comp.join();
+    std::cout << "Thread joined: COMP" << std::endl;
   }
 
   std::cout << "Presnost: " << static_cast<double>(correct) / total * 100.0
