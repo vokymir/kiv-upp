@@ -183,8 +183,6 @@ int main(int argc, char **argv) {
   int total = 0;
   int correct = 0;
 
-  int dumb_counter1 = 0;
-  int dumb_counter2 = 0;
   std::thread t_loading([&]() {
     for (int num = 0; num <= 9; ++num) {
       for (auto d : std::filesystem::directory_iterator("mnist/" +
@@ -195,13 +193,11 @@ int main(int argc, char **argv) {
         auto data = Load_BMP(d.path().string());
 
         data_loaded.push({num, data});
-        dumb_counter1++;
       }
     }
 
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
     all_data_loaded = true;
-    std::cout << "All data loaded." << std::endl;
   });
 
   std::thread t_transform([&]() {
@@ -216,12 +212,10 @@ int main(int argc, char **argv) {
       Transform(data);
 
       data_transformed.push({num, data});
-      dumb_counter2++;
     }
 
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
     all_data_transformed = true;
-    std::cout << "All data transformed." << std::endl;
   });
 
   std::thread t_binarize([&]() {
@@ -240,7 +234,6 @@ int main(int argc, char **argv) {
 
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
     all_data_binarized = true;
-    std::cout << "All data binarized." << std::endl;
   });
 
   std::thread t_label([&]() {
@@ -259,7 +252,6 @@ int main(int argc, char **argv) {
 
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
     all_data_labeled = true;
-    std::cout << "All data labeled." << std::endl;
   });
 
   std::thread t_comp([&]() {
@@ -276,29 +268,22 @@ int main(int argc, char **argv) {
       }
       total++;
     }
-
-    std::cout << "All data compared." << std::endl;
   });
 
   if (t_loading.joinable()) {
     t_loading.join();
-    std::cout << "Thread joined: LOAD" << std::endl;
   }
   if (t_transform.joinable()) {
     t_transform.join();
-    std::cout << "Thread joined: TRANSFORM" << std::endl;
   }
   if (t_binarize.joinable()) {
     t_binarize.join();
-    std::cout << "Thread joined: BINARIZE" << std::endl;
   }
   if (t_label.joinable()) {
     t_label.join();
-    std::cout << "Thread joined: LABEL" << std::endl;
   }
   if (t_comp.joinable()) {
     t_comp.join();
-    std::cout << "Thread joined: COMP" << std::endl;
   }
 
   std::cout << "Presnost: " << static_cast<double>(correct) / total * 100.0
