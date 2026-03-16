@@ -31,10 +31,14 @@ static bool Matrix_Multiply(const Matrix &a, const Matrix &b, Matrix &result) {
         [&](size_t begin, size_t end) {
           for (size_t dst_x = begin; dst_x < end; dst_x++) {
             for (size_t dst_y = 0; dst_y < result[dst_x].size(); dst_y++) {
-              result[dst_x][dst_y] = 0;
+              // result[dst_x][dst_y] = 0;
 
+              double tmp = 0;
               for (size_t x = 0; x < a.size(); x++)
-                result[dst_x][dst_y] += a[x][dst_y] * b[dst_x][x];
+                // result[dst_x][dst_y] += a[x][dst_y] * b[dst_x][x];
+                tmp += a[x][dst_y] * b[dst_x][x];
+
+              result[dst_x][dst_y] = tmp;
             }
           }
         },
