@@ -169,6 +169,19 @@ int main(int argc, char **argv) {
    * jakmile bude dokoncena, spusti svou praci
    */
 
+  /*
+   * Predava si ve frontach ukoly. Neresil jsem soubehy pri pristupu do
+   * front (u me to ma tak cca 20% sanci spadnout na bad_alloc).
+   *
+   * Hloupe aktivni cekani, protoze ocekavam, ze vsechny prace budou rychly a CV
+   * by to akorat jeste zpomalila. Zaujalo me, ze aktivni cekani nefungovalo,
+   * dokud jsem nepridal cekani (1ms) pri prazdne fronte. To si aktualne
+   * nedokazu vysvetlit jinak, nez ze to kompilator nejak divne vyoptimalizoval
+   * (-O3 -DNDEBUG).
+   *
+   * Seriove: ~120ms
+   * Paralelne: ~480ms
+   * */
   std::queue<std::pair<int, std::vector<unsigned char>>> data_loaded{};
   bool all_data_loaded = false;
   std::queue<std::pair<int, std::vector<unsigned char>>> data_transformed{};
