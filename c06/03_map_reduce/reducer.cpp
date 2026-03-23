@@ -12,11 +12,11 @@ void CReducer::_Start(IChannel &input, IChannel &output) {
   std::pair<std::string, std::list<size_t>> item;
   while (in.get(item)) {
 
-    // najdeme nejmensi index
-    size_t min_idx = *std::min_element(item.second.begin(), item.second.end());
+    // najdeme nejvetsi index
+    size_t max_idx = *std::max_element(item.second.begin(), item.second.end());
 
     // a odesleme to na vystup
-    out.post({item.first, min_idx});
+    out.post({item.first, max_idx});
   }
 
   out.terminate();
