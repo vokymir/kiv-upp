@@ -8,6 +8,6 @@ void COutput::_Start(IChannel &input, IChannel & /*output*/) {
   // dokud nam reducer posila vstupy, budeme je vypisovat
   std::pair<std::string, size_t> item;
   while (in.get(item)) {
-    std::cout << item.first << " - " << item.second << "x" << std::endl;
+    std::cout << item.first << " - " << item.second << "." << std::endl;
   }
 }

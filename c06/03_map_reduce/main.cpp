@@ -13,7 +13,8 @@ int main(int argc, char **argv) {
   // output = vypise vystup na konzoli - slovo a pocet jeho vyskytu
 
   // vytvorime komponenty
-  CInput input("genesis_filtered.txt");
+  // spoustim tam, kde je cmake
+  CInput input("./03_map_reduce/genesis_filtered.txt");
   CSplitter splitter;
   CMapper mapper;
   CCombiner combiner;

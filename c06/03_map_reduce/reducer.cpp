@@ -1,4 +1,6 @@
 #include "mapreduce.h"
+#include <algorithm>
+#include <cstddef>
 
 void CReducer::_Start(IChannel &input, IChannel &output) {
   CCombiner_Reducer_Channel &in =
@@ -10,14 +12,11 @@ void CReducer::_Start(IChannel &input, IChannel &output) {
   std::pair<std::string, std::list<size_t>> item;
   while (in.get(item)) {
 
-    // redukujeme pocty do jednoho souctu
-    size_t total = 0;
-    for (auto &t : item.second) {
-      total += t;
-    }
+    // najdeme nejmensi index
+    size_t min_idx = *std::min_element(item.second.begin(), item.second.end());
 
     // a odesleme to na vystup
-    out.post({item.first, total});
+    out.post({item.first, min_idx});
   }
 
   out.terminate();

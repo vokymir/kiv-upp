@@ -1,5 +1,6 @@
 #include "mapreduce.h"
 
+#include <cstddef>
 #include <sstream>
 
 void CMapper::_Start(IChannel &input, IChannel &output) {
@@ -10,6 +11,8 @@ void CMapper::_Start(IChannel &input, IChannel &output) {
 
   // dokud je co cist ze vstupniho kanalu
   std::string line;
+  size_t index = 0;
+
   while (in.get(line)) {
 
     // istringstream pro parsovani vstupni radky na slova
@@ -20,7 +23,7 @@ void CMapper::_Start(IChannel &input, IChannel &output) {
     while (word = "", std::getline(iss, word, ' ')) {
       // pokud slovo neni prazdne, posleme ho dal
       if (!word.empty()) {
-        out.post({word, 1});
+        out.post({word, index++});
       }
     }
   }
