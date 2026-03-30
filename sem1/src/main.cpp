@@ -4,7 +4,7 @@
 #include "filter.hpp"
 #include "fluctuation.hpp"
 #include "loader.hpp"
-#include "stations.hpp"
+#include "model/model.hpp"
 #include <chrono>
 #include <exception>
 #include <memory>
@@ -23,10 +23,13 @@ constexpr int ERROR_ARGUMENTS = 1;
 constexpr int ERROR_EXECUTION = 2;
 constexpr int ERROR_UNKNOWN = 3;
 
+// small helper struct - print time elapsed
+// a timer is started on creation & restarted on every lap() call
 struct Timer {
   using clock = std::chrono::high_resolution_clock;
   clock::time_point start = clock::now();
 
+  // restart timer, print elapsed time with given comment
   void lap(const std::string_view &comment) {
     auto now = clock::now();
     auto elapsed =
@@ -36,6 +39,7 @@ struct Timer {
   }
 };
 
+// how to use this program?
 void print_usage() {
   std::print(
       "\nUsage:\n./upp_sp1 [path to stations file] [path to measurements "
@@ -45,6 +49,8 @@ void print_usage() {
       DEFAULT_IS_PARALLEL ? "parallel" : "serial");
 }
 
+// load all arguments from CLI into given memory
+// may THROW
 void load_args(int argc, char **argv, std::string &stations_path,
                std::string &measurements_path, bool &is_parallel) {
   // use provided parameters
@@ -68,10 +74,8 @@ void load_args(int argc, char **argv, std::string &stations_path,
   }
 }
 
-void print_info(const chmu::Stations &sts) {
-  std::print("Stations: {}\n", sts.stations.size());
-}
-
+// the program's first version, serial in execution
+// works as is specified in the assignment
 void serial_version(const std::string_view &stations_path,
                     const std::string_view &measurements_path) {
   Timer timer;
