@@ -1,7 +1,6 @@
 
 #include "draw.hpp"
-#include "station.hpp"
-#include "stations.hpp"
+#include "model/model.hpp"
 #include <algorithm>
 #include <array>
 #include <format>

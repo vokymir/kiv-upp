@@ -1,6 +1,6 @@
 #pragma once
 
-#include "stations.hpp"
+#include "model/model.hpp"
 #include <filesystem>
 #include <memory>
 namespace chmu {

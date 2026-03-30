@@ -1,7 +1,6 @@
 #pragma once
 
-#include "station.hpp"
-#include "stations.hpp"
+#include "model/model.hpp"
 namespace chmu {
 
 // ===== LOOK OUT =====

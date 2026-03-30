@@ -1,6 +1,5 @@
 #include "averager.hpp"
-#include "measurement.hpp"
-#include "station.hpp"
+#include "model/model.hpp"
 #include <cstddef>
 #include <iterator>
 #include <numeric>

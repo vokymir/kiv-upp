@@ -1,6 +1,6 @@
 #pragma once
 
-#include "stations.hpp"
+#include "model/model.hpp"
 namespace chmu {
 
 // filter out stations which has

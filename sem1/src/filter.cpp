@@ -1,7 +1,6 @@
 
 #include "filter.hpp"
-#include "measurement.hpp"
-#include "station.hpp"
+#include "model/model.hpp"
 #include <cstddef>
 #include <vector>
 namespace chmu {

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "stations.hpp"
+#include "model/model.hpp"
 #include <string>
 
 constexpr std::string DEFAULT_EXPORT_CSV_PATH = "vykyvy.csv";
