@@ -1,7 +1,7 @@
 #pragma once
 
 #include <charconv>
-#include <cstddef>
+#include <chrono>
 #include <string_view>
 namespace chmu {
 
@@ -30,13 +30,9 @@ struct Date {
     day_ = d;
   }
 
-  // get number from date - the date is number of days between base date
-  // (1.1.1990) and given date
-  static size_t from_date(Date date);
-  static size_t from_date(int year, int month, int day);
-
-  // get date from number
-  static Date to_date(size_t date);
+  std::chrono::sys_days day_point() const {
+    return std::chrono::year{year_} / month_ / day_;
+  }
 };
 
 } // namespace chmu

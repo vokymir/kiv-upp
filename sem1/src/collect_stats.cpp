@@ -17,14 +17,14 @@ void collect_stats_station__serial(Station &station) {
 
   auto year_groups =
       measurements | std::views::chunk_by([](const auto &a, const auto &b) {
-        return a.civil_date().year_ == b.civil_date().year_;
+        return a.date().year_ == b.date().year_;
       });
 
   // for all years, split months and process one-by-one
   for (auto year_view : year_groups) {
     auto month_groups =
         year_view | std::views::chunk_by([](const auto &a, const auto &b) {
-          return a.civil_date().month_ == b.civil_date().month_;
+          return a.date().month_ == b.date().month_;
         });
 
     for (auto month_view : month_groups) {
@@ -38,7 +38,7 @@ void collect_stats_station__serial(Station &station) {
 
 void collect_stats_station_month__serial(Station &station, auto month_view) {
   // get month from first element - doesn't matter from which
-  auto date = month_view.front().civil_date();
+  auto date = month_view.front().date();
   int month = date.month_;
   int year = date.year_;
 
