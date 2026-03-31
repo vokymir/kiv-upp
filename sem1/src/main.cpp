@@ -1,4 +1,4 @@
-#include "averager.hpp"
+#include "collect_stats.hpp"
 #include "csv.hpp"
 #include "draw.hpp"
 #include "filter.hpp"
@@ -7,11 +7,11 @@
 #include "model/model.hpp"
 #include <chrono>
 #include <exception>
-#include <memory>
 #include <print>
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <vector>
 
 using namespace std::literals;
 
@@ -81,32 +81,28 @@ void serial_version(const std::string_view &stations_path,
   Timer timer;
 
   // A) load data
-  std::unique_ptr<chmu::Stations> stations =
+  std::vector<chmu::Station> stations =
       chmu::load__serial(stations_path, measurements_path);
   timer.lap("Data loaded.");
 
   // B) pre-process data (=filtration) [1]
-  chmu::filter__serial(*stations);
+  chmu::filter__serial(stations);
   timer.lap("Data filtered.");
 
-  // C) calculate averages
-  chmu::compute_averages__serial(*stations);
-  timer.lap("Averages computed.");
-
-  // D) calculate monthly averages [3]
-  chmu::compute_monthly_averages__serial(*stations);
+  // C) work on big data [3]
+  chmu::collect_stats__serial(stations);
   timer.lap("Monthly averages computed.");
 
-  // E) identify fluctuation [2]
-  chmu::identify_fluctuation__serial(*stations);
+  // D) identify fluctuation [2]
+  chmu::identify_fluctuation__serial(stations);
   timer.lap("Fluctuations identified.");
 
-  // F) draw a map for each month [4]
-  chmu::draw_svg__serial(*stations);
+  // E) draw a map for each month [4]
+  chmu::draw_svg__serial(stations);
   timer.lap("Draw SVG maps.");
 
-  // G) create a CSV output file [5]
-  chmu::write_csv__serial(*stations);
+  // F) create a CSV output file [5]
+  chmu::write_csv__serial(stations);
   timer.lap("CSV with fluctuations written.");
 }
 
