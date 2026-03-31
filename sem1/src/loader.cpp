@@ -3,7 +3,6 @@
 #include "model/model.hpp"
 #include <cstddef>
 #include <fstream>
-#include <memory>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -12,8 +11,7 @@ namespace chmu {
 
 // helper function for parsing next field in CSV
 // naive and simple
-// return new string_view with the found field, edit the original string_view s
-// not to include it
+// return new string_view with the found field, remove prefix in sv s
 std::string_view next_field_(std::string_view &s, char delim = ';') {
   size_t pos = s.find(delim);
   std::string_view field = s.substr(0, pos);
@@ -24,25 +22,26 @@ std::string_view next_field_(std::string_view &s, char delim = ';') {
   return field;
 }
 
-std::unique_ptr<Stations>
+std::vector<Station>
 load__serial(const std::filesystem::path &stations_path,
              const std::filesystem::path &measurements_path) {
-  std::unique_ptr<Stations> stations = load_stations__serial(stations_path);
+  std::vector<Station> stations = load_stations__serial(stations_path);
 
-  load_measurements__serial(measurements_path, *stations);
+  load_measurements__serial(measurements_path, stations);
 
   return stations;
 }
 
-std::unique_ptr<Stations>
+std::vector<Station>
 load_stations__serial(const std::filesystem::path &stations_path) {
   std::ifstream file(stations_path);
   if (!file) {
     throw std::runtime_error("Invalid stations path.");
   }
 
-  std::unique_ptr<Stations> stations = std::make_unique<Stations>();
-  stations->stations.reserve(1024);
+  std::vector<Station> stations{};
+  // it will probably be more
+  stations.reserve(1024);
 
   std::string line;
   // skip header
@@ -62,14 +61,14 @@ load_stations__serial(const std::filesystem::path &stations_path) {
     std::string_view lat_sv = next_field_(sv);
     std::string_view lon_sv = next_field_(sv);
 
-    stations->add_station(id_sv, name_sv, lat_sv, lon_sv);
+    stations.emplace_back(id_sv, name_sv, lat_sv, lon_sv);
   }
 
   return stations;
 }
 
 void load_measurements__serial(const std::filesystem::path &measurements_path,
-                               Stations &stations) {
+                               std::vector<Station> &stations) {
   std::ifstream file(measurements_path);
   if (!file) {
     throw std::runtime_error("Invalid measurements path.");
@@ -102,13 +101,13 @@ void load_measurements__serial(const std::filesystem::path &measurements_path,
     size_t id = 0;
     std::from_chars(id_sv.data(), id_sv.data() + id_sv.size(), id);
 
-    auto station = stations.get_station(id);
-    if (!station) {
+    if (id == 0 || id > stations.size()) {
       throw std::runtime_error("There is a measurement which does not belong "
                                "to any existing stations.");
     }
-    station->get().measurements().emplace_back(year_sv, month_sv, day_sv,
-                                               value_sv);
+
+    auto station = stations[id - 1];
+    station.measurements().emplace_back(year_sv, month_sv, day_sv, value_sv);
   }
 }
 
