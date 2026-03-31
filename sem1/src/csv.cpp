@@ -5,6 +5,9 @@ namespace chmu {
 
 void write_csv__serial(const std::vector<Station> &stations) {
   std::ofstream file(DEFAULT_EXPORT_CSV_PATH);
+  if (!file) {
+    throw std::runtime_error("Cannot open CSV file");
+  }
 
   file << "id;month;year;diff\n";
 
