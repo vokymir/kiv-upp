@@ -1,5 +1,4 @@
 #include "collect_stats.hpp"
-#include "model/measurement.hpp"
 #include "model/model.hpp"
 #include "model/stats.hpp"
 #include <cstddef>

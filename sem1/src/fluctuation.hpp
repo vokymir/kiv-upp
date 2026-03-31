@@ -3,8 +3,8 @@
 #include "model/model.hpp"
 namespace chmu {
 
-// Find add fluctuations across all stations and months.
-void identify_fluctuation__serial(Stations &stations);
+// find all fluctuations across all stations and months.
+void identify_fluctuation__serial(std::vector<Station> &stations);
 
 // Find all fluctuations at a station in all months.
 void identify_fluctuation_station__serial(Station &station);

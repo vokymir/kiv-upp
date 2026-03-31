@@ -1,6 +1,5 @@
 
 #include "model/model.hpp"
-#include <algorithm>
 #include <cassert>
 #include <cstddef>
 #include <cstdlib>
@@ -11,30 +10,23 @@ namespace chmu {
 void identify_fluctuation_station_month__serial(Station &station,
                                                 int month_id) {
   int month_idx = month_id - 1;
-  auto &averages = station.averages()[month_idx].averages; // :)
+  const auto &series = station.stats().monthly_series_[month_idx].values;
   std::vector<Fluctuation> &flucs = station.fluctuations();
 
-  if (averages.empty()) {
+  if (series.empty()) {
     return;
   }
 
   // === find threshold
-  auto [min_it, max_it] = std::ranges::minmax_element(
-      averages, [](const auto &obj1, const auto &obj2) {
-        return obj1.average < obj2.average;
-      });
-  float min_val = min_it->average;
-  float max_val = max_it->average;
+  float min_val = station.stats().monthly_min_[month_idx];
+  float max_val = station.stats().monthly_max_[month_idx];
 
   float threshold = (max_val - min_val) * 0.75;
 
   // === find fluctuations
   // WARN: important assumption: averages are sorted by year
-  // that relies on measurements being sorted and no bad operation in between
-  // (This is not checked nor ensured anywhere, just assumed the given data are
-  // nice.)
-  for (const auto &[prev, curr] : averages | std::views::adjacent<2>) {
-    auto diff = std::abs(prev.average - curr.average);
+  for (const auto &[prev, curr] : series | std::views::adjacent<2>) {
+    auto diff = std::abs(prev.value - curr.value);
     if (diff <= threshold) {
       continue;
     }
@@ -49,8 +41,8 @@ void identify_fluctuation_station__serial(Station &station) {
   }
 }
 
-void identify_fluctuation__serial(Stations &stations) {
-  for (auto &st : stations.stations) {
+void identify_fluctuation__serial(std::vector<Station> &stations) {
+  for (auto &st : stations) {
     identify_fluctuation_station__serial(st);
   }
 }
