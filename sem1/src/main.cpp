@@ -107,7 +107,34 @@ void serial_version(const std::string_view &stations_path,
 }
 
 void parallel_version(const std::string_view &stations_path,
-                      const std::string_view &measurements_path) {}
+                      const std::string_view &measurements_path) {
+  Timer timer;
+
+  // A) load data *the same*
+  std::vector<chmu::Station> stations =
+      chmu::load__serial(stations_path, measurements_path);
+  timer.lap("Data loaded.");
+
+  // B) pre-process data (=filtration) [1]
+  chmu::filter__serial(stations);
+  timer.lap("Data filtered.");
+
+  // C) work on big data [3]
+  chmu::collect_stats__serial(stations);
+  timer.lap("Monthly averages computed.");
+
+  // D) identify fluctuation [2]
+  chmu::identify_fluctuation__serial(stations);
+  timer.lap("Fluctuations identified.");
+
+  // E) draw a map for each month [4]
+  chmu::draw_svg__serial(stations);
+  timer.lap("Draw SVG maps.");
+
+  // F) create a CSV output file [5]
+  chmu::write_csv__serial(stations);
+  timer.lap("CSV with fluctuations written.");
+}
 
 int main(int argc, char **argv) {
   std::string stations_path = DEFAULT_STATIONS_PATH;
