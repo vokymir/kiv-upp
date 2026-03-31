@@ -7,7 +7,7 @@
 #include <string>
 #include <string_view>
 #include <vector>
-namespace chmu {
+namespace chmu::load {
 
 // helper function for parsing next field in CSV
 // naive and simple
@@ -22,18 +22,18 @@ std::string_view next_field_(std::string_view &s, char delim = ';') {
   return field;
 }
 
-std::vector<Station>
-load__serial(const std::filesystem::path &stations_path,
-             const std::filesystem::path &measurements_path) {
-  std::vector<Station> stations = load_stations__serial(stations_path);
+namespace serial {
 
-  load_measurements__serial(measurements_path, stations);
+std::vector<Station> work(const std::filesystem::path &stations_path,
+                          const std::filesystem::path &measurements_path) {
+  std::vector<Station> stations = only_stations(stations_path);
+
+  only_measurements(measurements_path, stations);
 
   return stations;
 }
 
-std::vector<Station>
-load_stations__serial(const std::filesystem::path &stations_path) {
+std::vector<Station> only_stations(const std::filesystem::path &stations_path) {
   std::ifstream file(stations_path);
   if (!file) {
     throw std::runtime_error("Invalid stations path.");
@@ -67,8 +67,8 @@ load_stations__serial(const std::filesystem::path &stations_path) {
   return stations;
 }
 
-void load_measurements__serial(const std::filesystem::path &measurements_path,
-                               std::vector<Station> &stations) {
+void only_measurements(const std::filesystem::path &measurements_path,
+                       std::vector<Station> &stations) {
   std::ifstream file(measurements_path);
   if (!file) {
     throw std::runtime_error("Invalid measurements path.");
@@ -111,4 +111,6 @@ void load_measurements__serial(const std::filesystem::path &measurements_path,
   }
 }
 
-} // namespace chmu
+} // namespace serial
+
+} // namespace chmu::load
