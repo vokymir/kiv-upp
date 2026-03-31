@@ -85,17 +85,14 @@ std::vector<Station> only_stations(const std::filesystem::path &stations_path) {
       continue;
     }
 
-    std::string_view id_sv;
-    get_until(line, id_sv, ';');
-    std::string_view name_sv;
-    get_until(line, name_sv, ';');
-    std::string_view lat_sv;
-    get_until(line, lat_sv, ';');
-    std::string_view lon_sv;
+    std::string_view sv_id, sv_name, sv_lat, sv_lon;
+    get_until(line, sv_id, ';');
+    get_until(line, sv_name, ';');
+    get_until(line, sv_lat, ';');
     // on linux not found (OK), on windows found and therefore ignored (OK)
-    get_until(line, lon_sv, '\r');
+    get_until(line, sv_lon, '\r');
 
-    stations.emplace_back(id_sv, name_sv, lat_sv, lon_sv);
+    stations.emplace_back(sv_id, sv_name, sv_lat, sv_lon);
   }
 
   return stations;
@@ -124,30 +121,25 @@ void only_measurements(const std::filesystem::path &measurements_path,
       1;0;2013;6;1;10.6
       1;1;2013;6;2;14.1
     */
-    std::string_view id_sv;
-    get_until(line, id_sv, ';');
-    std::string_view ordinal_sv;
-    get_until(line, ordinal_sv, ';');
-    std::string_view year_sv;
-    get_until(line, year_sv, ';');
-    std::string_view month_sv;
-    get_until(line, month_sv, ';');
-    std::string_view day_sv;
-    get_until(line, day_sv, ';');
-    std::string_view value_sv;
-    // the same note as in only_stations
-    get_until(line, value_sv, '\r');
+    std::string_view sv_id, sv_ordinal, sv_year, sv_month, sv_day, sv_value;
+    get_until(line, sv_id, ';');
+    get_until(line, sv_ordinal, ';');
+    get_until(line, sv_year, ';');
+    get_until(line, sv_month, ';');
+    get_until(line, sv_day, ';');
+    get_until(line, sv_value, '\r');
 
     size_t id = 0;
-    std::from_chars(id_sv.data(), id_sv.data() + id_sv.size(), id);
+    std::from_chars(sv_id.data(), sv_id.data() + sv_id.size(), id);
 
     if (id == 0 || id > stations.size()) {
       throw std::runtime_error("There is a measurement which does not belong "
-                               "to any existing stations.");
+                               "to any existing stations with id=" +
+                               std::to_string(id));
     }
 
     auto &station = stations[id - 1];
-    station.measurements().emplace_back(year_sv, month_sv, day_sv, value_sv);
+    station.measurements().emplace_back(sv_year, sv_month, sv_day, sv_value);
   }
 }
 
