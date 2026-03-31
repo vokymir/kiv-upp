@@ -1,7 +1,7 @@
 #pragma once
 
 #include "measurement.hpp"
-#include <array>
+#include "stats.hpp"
 #include <charconv>
 #include <cstddef>
 #include <string>
@@ -17,20 +17,6 @@ struct Fluctuation {
   float temp_diff;
 };
 
-// storage for one monthly average value - store the value and year
-struct Monthly_Average {
-  float average;
-  int year;
-};
-
-// storage for all averages in one month across multiple years
-struct Monthly_Averages {
-  std::vector<Monthly_Average> averages;
-
-  // add one average record
-  void add(float avg, int year) { averages.push_back({avg, year}); }
-};
-
 class Station {
 private:
   // information about the station itself
@@ -42,13 +28,7 @@ private:
   // here are stored all measurements which are loaded from the file
   std::vector<Measurement> measurements_;
 
-  // here are stored all monthly averages for all months across all years in
-  // measurements - these are computed after the original file was closed
-  std::array<Monthly_Averages, 12> averages_;
-
-  // one average value for every month - this is a mere storage, calculated from
-  // averages_
-  std::array<float, 12> averages_by_month_;
+  Stats stats_;
 
   // storage for all fluctuations
   std::vector<Fluctuation> fluctuations_;
@@ -77,11 +57,7 @@ public:
     return fluctuations_;
   }
 
-  auto &averages() { return averages_; }
-  std::array<float, 12> &averages_by_month() { return averages_by_month_; }
-  const std::array<float, 12> &averages_by_month_const() const {
-    return averages_by_month_;
-  }
+  const Stats &stats() { return stats_; }
 };
 
 } // namespace chmu
