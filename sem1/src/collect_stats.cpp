@@ -1,6 +1,5 @@
 #include "collect_stats.hpp"
 #include "model/model.hpp"
-#include "model/stats.hpp"
 #include <cstddef>
 #include <numeric>
 #include <ranges>
