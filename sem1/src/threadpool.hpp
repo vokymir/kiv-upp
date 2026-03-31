@@ -72,6 +72,12 @@ private:
   std::condition_variable cv_;
 
   bool stop_ = false;
+
+  // ===
+  // getters
+  // ===
+public:
+  auto n_threads() const { return threads_.size(); }
 };
 
 } // namespace parallel

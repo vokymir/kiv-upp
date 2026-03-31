@@ -5,6 +5,7 @@
 #include "fluctuation.hpp"
 #include "loader.hpp"
 #include "model/model.hpp"
+#include "threadpool.hpp"
 #include <chrono>
 #include <exception>
 #include <print>
@@ -82,7 +83,7 @@ void serial_version(const std::string_view &stations_path,
 
   // A) load data
   std::vector<chmu::Station> stations =
-      chmu::load__serial(stations_path, measurements_path);
+      chmu::load::serial::work(stations_path, measurements_path);
   timer.lap("Data loaded.");
 
   // B) pre-process data (=filtration) [1]
@@ -108,11 +109,12 @@ void serial_version(const std::string_view &stations_path,
 
 void parallel_version(const std::string_view &stations_path,
                       const std::string_view &measurements_path) {
+  parallel::Thread_Pool thread_pool{};
   Timer timer;
 
   // A) load data *the same*
   std::vector<chmu::Station> stations =
-      chmu::load__serial(stations_path, measurements_path);
+      chmu::load::parallel::work(thread_pool, stations_path, measurements_path);
   timer.lap("Data loaded.");
 
   // B) pre-process data (=filtration) [1]
