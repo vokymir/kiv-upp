@@ -92,22 +92,18 @@ void Point::put(float lat, float lon) {
 
 void Point::color(float temperature, const Temperature_Range &range) {
   float t = (temperature - range.min) / (range.max - range.min);
+  t = std::clamp(t, 0.0f, 1.0f);
+
   int red, green, blue;
 
-  if (t < 0.5f) {
-    // from blue to yellow
-    float brightness = t * 2;
-
-    red = (255 * brightness); // these two together are yellow
-    green = (255 * brightness);
-    blue = (255 * (1 - brightness)); // from blue
+  if (t <= 0.5f) {
+    red = static_cast<int>(t * 2 * 255);
+    green = static_cast<int>(t * 2 * 255);
+    blue = 255;
   } else {
-    // from yellow to red
-    float brightness = (t - 0.5) * 2;
-
-    red = 255;                        // the same in both Y and R
-    green = (255 * (1 - brightness)); // from Y to R
-    blue = 0;                         // the same
+    red = 255;
+    green = static_cast<int>((1.0f - t) * 2 * 255);
+    blue = 0;
   }
 
   color_code = "rgb(" + std::to_string(red) + "," + std::to_string(green) +
