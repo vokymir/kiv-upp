@@ -15,21 +15,16 @@ void collect_stats__serial(std::vector<Station> &stations) {
 void collect_stats_station__serial(Station &station) {
   auto &measurements = station.measurements_const();
 
-  auto year_groups =
+  // grouping by one particular month
+  auto month_year_groups =
       measurements | std::views::chunk_by([](const auto &a, const auto &b) {
-        return a.date().year_ == b.date().year_;
+        return a.date().year_ == b.date().year_ &&
+               a.date().month_ == b.date().month_;
       });
 
-  // for all years, split months and process one-by-one
-  for (auto year_view : year_groups) {
-    auto month_groups =
-        year_view | std::views::chunk_by([](const auto &a, const auto &b) {
-          return a.date().month_ == b.date().month_;
-        });
-
-    for (auto month_view : month_groups) {
-      collect_stats_station_month__serial(station, month_view);
-    }
+  // calculate everything from that month
+  for (auto month_view : month_year_groups) {
+    collect_stats_station_month__serial(station, month_view);
   }
 
   // final - calculate mean
