@@ -58,7 +58,7 @@ public:
   }
 
   Stats &stats() { return stats_; }
-  const Stats &stats_const() { return stats_; }
+  const Stats &stats_const() const { return stats_; }
 };
 
 } // namespace chmu

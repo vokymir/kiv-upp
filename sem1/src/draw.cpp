@@ -6,7 +6,6 @@
 #include <format>
 #include <fstream>
 #include <iterator>
-#include <ranges>
 #include <string>
 #include <vector>
 namespace chmu {
@@ -15,7 +14,7 @@ constexpr const std::array<std::string, 12> month_names = {
     "leden",    "unor",  "brezen", "duben", "kveten",   "cerven",
     "cervenec", "srpen", "zari",   "rijen", "listopad", "prosinec"};
 
-void draw_svg__serial(const Stations &stations) {
+void draw_svg__serial(const std::vector<Station> &stations) {
   auto range = get_temperature_range(stations);
 
   for (int month = 1; month <= 12; ++month) {
@@ -24,16 +23,16 @@ void draw_svg__serial(const Stations &stations) {
   }
 }
 
-std::vector<Point> prepare_svg_month__serial(const Stations &stations,
-                                             int month_1_indexed,
-                                             const Temperature_Range &range) {
+std::vector<Point>
+prepare_svg_month__serial(const std::vector<Station> &stations,
+                          int month_1_indexed, const Temperature_Range &range) {
   int month = month_1_indexed - 1;
   std::vector<Point> points;
 
   // prepare all station points to draw
-  for (const auto &st : stations.stations) {
-    points.emplace_back(st.lat(), st.lon(), st.averages_by_month_const()[month],
-                        range);
+  for (const auto &st : stations) {
+    points.emplace_back(st.lat(), st.lon(),
+                        st.stats_const().monthly_mean_[month], range);
   }
 
   return points;
@@ -64,22 +63,18 @@ void write_svg_month__serial(const std::vector<Point> &points,
   file << svg.substr(pos);
 }
 
-Temperature_Range get_temperature_range(const Stations &stations) {
-  // get all values across all stations
-  auto all_values =
-      stations.stations |
-      std::views::transform([](const Station &st) -> const auto & {
-        return st.measurements_const();
-      }) |
-      std::views::join;
+Temperature_Range get_temperature_range(const std::vector<Station> &stations) {
+  float min_val = std::numeric_limits<float>::infinity();
+  float max_val = -std::numeric_limits<float>::infinity();
 
-  // get the lowest and highest temperature measurement across all stations
-  auto [min, max] = std::ranges::minmax_element(
-      all_values, [](const auto &mes1, const auto &mes2) {
-        return mes1.value() < mes2.value();
-      });
+  for (const auto &st : stations) {
+    const auto &s = st.stats_const();
 
-  return {min->value(), max->value()};
+    min_val = std::min(min_val, s.global_min_);
+    max_val = std::max(max_val, s.global_max_);
+  }
+
+  return {min_val, max_val};
 }
 
 void Point::put(float lat, float lon) {
