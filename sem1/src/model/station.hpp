@@ -57,7 +57,8 @@ public:
     return fluctuations_;
   }
 
-  const Stats &stats() { return stats_; }
+  Stats &stats() { return stats_; }
+  const Stats &stats_const() { return stats_; }
 };
 
 } // namespace chmu
