@@ -106,7 +106,7 @@ void load_measurements__serial(const std::filesystem::path &measurements_path,
                                "to any existing stations.");
     }
 
-    auto station = stations[id - 1];
+    auto &station = stations[id - 1];
     station.measurements().emplace_back(year_sv, month_sv, day_sv, value_sv);
   }
 }
