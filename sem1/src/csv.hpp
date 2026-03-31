@@ -8,6 +8,6 @@ constexpr std::string DEFAULT_EXPORT_CSV_PATH = "vykyvy.csv";
 namespace chmu {
 
 // write all fluctuations in CSV file in assignment-specified format
-void write_csv__serial(const Stations &stations);
+void write_csv__serial(const std::vector<Station> &stations);
 
 } // namespace chmu
