@@ -8,6 +8,7 @@
 #include "threadpool.hpp"
 #include <chrono>
 #include <exception>
+#include <latch>
 #include <print>
 #include <stdexcept>
 #include <string>
@@ -131,17 +132,37 @@ void parallel_version(const std::string_view &stations_path,
   chmu::stats::parallel::work(stations);
   timer.lap("Monthly averages computed.");
 
-  // E) draw a map for each month [4]
-  chmu::draw::parallel::work(stations);
-  timer.lap("Draw SVG maps.");
+  std::latch latch_D(1);
+  std::latch latch_E(1);
 
-  // D) identify fluctuation [2]
-  chmu::flucs::parallel::work(stations);
-  timer.lap("Fluctuations identified.");
+  thread_pool.enqueue([&]() {
+    Timer timer_D;
+
+    // D) identify fluctuation [2]
+    chmu::flucs::parallel::work(stations);
+    timer_D.lap("Fluctuations identified.");
+
+    latch_D.count_down();
+  });
+
+  thread_pool.enqueue([&]() {
+    Timer timer_E;
+
+    // E) draw a map for each month [4]
+    chmu::draw::parallel::work(stations);
+    timer_E.lap("Draw SVG maps.");
+
+    latch_E.count_down();
+  });
+
+  latch_D.wait();
+  timer.reset();
 
   // F) create a CSV output file [5]
   chmu::csv::parallel::work(thread_pool, stations);
   timer.lap("CSV with fluctuations written.");
+
+  latch_E.wait();
 
   total_time.lap("Program finished!");
 }
