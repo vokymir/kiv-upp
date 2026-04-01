@@ -99,7 +99,7 @@ void serial_version(const std::string_view &stations_path,
   timer.lap("Fluctuations identified.");
 
   // E) draw a map for each month [4]
-  chmu::draw_svg__serial(stations);
+  chmu::draw::serial::work(stations);
   timer.lap("Draw SVG maps.");
 
   // F) create a CSV output file [5]
@@ -130,7 +130,7 @@ void parallel_version(const std::string_view &stations_path,
   timer.lap("Fluctuations identified.");
 
   // E) draw a map for each month [4]
-  chmu::draw_svg__serial(stations);
+  chmu::draw::serial::work(stations);
   timer.lap("Draw SVG maps.");
 
   // F) create a CSV output file [5]

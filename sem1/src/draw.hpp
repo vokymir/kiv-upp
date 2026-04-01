@@ -3,7 +3,7 @@
 #include "model/model.hpp"
 #include <string>
 #include <vector>
-namespace chmu {
+namespace chmu::draw {
 
 struct Temperature_Range {
   float min;
@@ -27,18 +27,22 @@ struct Point {
   }
 };
 
-// draw 12 svgs, one for each month
-void draw_svg__serial(const std::vector<Station> &stations);
-
-// prepare all points which should be drawn to the svg
-std::vector<Point>
-prepare_svg_month__serial(const std::vector<Station> &stations,
-                          int month_1_indexed, const Temperature_Range &range);
-
-// write all points into svg format
-void write_svg_month__serial(const std::vector<Point> &points,
-                             int month_1_indexed);
-
 // get the global min & max from all measurements
 Temperature_Range get_temperature_range(const std::vector<Station> &stations);
-} // namespace chmu
+
+namespace serial {
+
+// draw 12 svgs, one for each month
+void work(const std::vector<Station> &stations);
+
+// prepare all points which should be drawn to the svg
+std::vector<Point> prepare_month(const std::vector<Station> &stations,
+                                 int month_1_indexed,
+                                 const Temperature_Range &range);
+
+// write all points into svg format
+void write_month(const std::vector<Point> &points, int month_1_indexed);
+
+} // namespace serial
+
+} // namespace chmu::draw
