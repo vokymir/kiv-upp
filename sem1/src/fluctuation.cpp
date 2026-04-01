@@ -1,8 +1,10 @@
 
 #include "model/model.hpp"
+#include <algorithm>
 #include <cassert>
 #include <cstddef>
 #include <cstdlib>
+#include <execution>
 #include <ranges>
 #include <vector>
 namespace chmu::flucs {
@@ -49,5 +51,15 @@ void work(std::vector<Station> &stations) {
 }
 
 } // namespace serial
+
+namespace parallel {
+
+void work(std::vector<Station> &stations) {
+
+  std::for_each(std::execution::par, stations.begin(), stations.end(),
+                [](Station &st) { serial::station(st); });
+}
+
+} // namespace parallel
 
 } // namespace chmu::flucs

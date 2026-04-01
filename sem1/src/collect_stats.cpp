@@ -93,6 +93,7 @@ void station_means(Stats &stats) {
 namespace parallel {
 
 void work(std::vector<Station> &stations) {
+
   std::for_each(std::execution::par, stations.begin(), stations.end(),
                 [](Station &st) { serial::station(st); });
 }

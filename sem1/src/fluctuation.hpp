@@ -1,6 +1,7 @@
 #pragma once
 
 #include "model/model.hpp"
+#include <vector>
 namespace chmu::flucs {
 
 namespace serial {
@@ -16,5 +17,13 @@ void station(Station &station);
 void station_month(Station &station, int month);
 
 } // namespace serial
+
+namespace parallel {
+
+// do the same as serial version
+// uses embarrassing parallelism
+void work(std::vector<Station> &stations);
+
+} // namespace parallel
 
 } // namespace chmu::flucs
