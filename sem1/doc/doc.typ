@@ -377,23 +377,23 @@ $ <eq:gustafson-solved>
 
 #figure(
 table(
-  columns: (auto, auto, auto),
+  columns: (auto, auto, auto, auto),
   align: horizon+center,
-  [*Úloha*], [*Čas [ms] (sériová verze)*], [*Čas [ms] (paralelní verze)*],
+  [*Úloha*], [*Čas [ms] (S)*], [*Čas [ms] (P)*], [*Urychlení*],
 
-  [A - Načtení dat], [6 000], [3 500],
+  [A - Načtení dat], [6 000], [3 500], [1.7],
 
-  [B - Filtrace], [110], [69],
+  [B - Filtrace], [110], [69], [1.6],
 
-  [C - Statistiky], [108], [33],
+  [C - Statistiky], [108], [33], [3.3],
 
-  [D - Výkyvy], [3], [1],
+  [D - Výkyvy], [3], [1], [3],
 
-  [E - SVG mapy], [25], [18],
+  [E - SVG mapy], [25], [18], [1.4],
 
-  [F - zápis CSV], [15], [4],
+  [F - zápis CSV], [15], [4], [3.8],
 
-  [*Celkem*], [*6 261*], [*3 625*],
+  [*Celkem*], [*6 261*], [*3 625*], [*1.7*]
 ),
   caption: [Průměrné doby vykonávání jednotlivých úloh.]
 )<tab:tasks-timed>
@@ -418,13 +418,27 @@ Pro měření byla použita velká datová sada (`velke_mereni.csv`).
 Na základě celkových časů můžeme vypočítat základní metriky s využitím $p = 8$ vláken.
 
 *Dosažené urychlení (Speedup):*
-$ S = T_s / T_p =  /  approx  $
+$ S = T_s / T_p = 6261 / 3625 approx 1.7 $
 
 *Efektivita (Efficiency):*
-$ E = S / p =  / 8 approx  quad ( %) $
-
-*Amdahlův zákon:*
-
-*Gustafsonův zákon (škálované urychlení):*
+$ E = S / p = 1.7 / 8 approx 0.21 quad (21%) $
 
 = Závěr
+
+Dosažené hodnoty urychlení paralelizací se ani vzdáleně neblíží ideálnímu
+zrychlení 8$times$, které očekává Amdhal i Gustafson. Důvodů je více. 
+
+Nejdelší podúlohou bylo načítání vstupních souborů, kde bylo naměřené zrychlení
+$approx 1.7$ (což téměř přesně odpovídá kompletnímu urychlení). Přestože v tomto
+případě byla rozdělena práce spojená s parsováním CSV souboru mezi osm vláken,
+režie potřebná pro spojení částečných výsledků nedovolila výraznější zrychlení.
+
+Za povšimnutí stojí fakt, že největších zrychlení jsme dosáhlu u úloh C, D - to
+není tolik překvapivé, protože obě dvě využívají trapný paralelismus. Zároveň
+ale absolutně největšího zrychlení dosáhla úloha F, tedy zápis do souboru.
+Ukázalo se, přestože jsem o tom měl pochybnosti, že režie spojená s vytvářením
+řetězcových bufferů je málo podstatná oproti sekvenčnímu zápisu do paměti.
+
+Očekával jsem větši zrychlení u úlohy E (generování SVG map). Její špatnou
+optimalizaci připisuji "false sharing" TODO + TODO rollback na absolutni
+paralelizaci
