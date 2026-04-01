@@ -8,6 +8,7 @@
 #include "threadpool.hpp"
 #include <chrono>
 #include <exception>
+#include <latch>
 #include <print>
 #include <stdexcept>
 #include <string>
@@ -38,6 +39,8 @@ struct Timer {
     std::print("[{}] {}\n", elapsed, comment);
     start = now;
   }
+
+  void reset() { start = clock::now(); }
 };
 
 // how to use this program?
@@ -79,6 +82,7 @@ void load_args(int argc, char **argv, std::string &stations_path,
 // works as is specified in the assignment
 void serial_version(const std::string_view &stations_path,
                     const std::string_view &measurements_path) {
+  Timer total_time;
   Timer timer;
 
   // A) load data
@@ -105,11 +109,14 @@ void serial_version(const std::string_view &stations_path,
   // F) create a CSV output file [5]
   chmu::csv::serial::work(stations);
   timer.lap("CSV with fluctuations written.");
+
+  total_time.lap("Program finished!");
 }
 
 void parallel_version(const std::string_view &stations_path,
                       const std::string_view &measurements_path) {
   parallel::Thread_Pool thread_pool{};
+  Timer total_time;
   Timer timer;
 
   // A) load data *the same*
@@ -125,17 +132,39 @@ void parallel_version(const std::string_view &stations_path,
   chmu::stats::parallel::work(stations);
   timer.lap("Monthly averages computed.");
 
-  // D) identify fluctuation [2]
-  chmu::flucs::parallel::work(stations);
-  timer.lap("Fluctuations identified.");
+  std::latch latch_D(1);
+  std::latch latch_E(1);
 
-  // E) draw a map for each month [4]
-  chmu::draw::parallel::work(stations);
-  timer.lap("Draw SVG maps.");
+  thread_pool.enqueue([&]() {
+    Timer timer_D;
+
+    // D) identify fluctuation [2]
+    chmu::flucs::parallel::work(stations);
+    timer_D.lap("Fluctuations identified.");
+
+    latch_D.count_down();
+  });
+
+  thread_pool.enqueue([&]() {
+    Timer timer_E;
+
+    // E) draw a map for each month [4]
+    chmu::draw::parallel::work(stations);
+    timer_E.lap("Draw SVG maps.");
+
+    latch_E.count_down();
+  });
+
+  latch_D.wait();
+  timer.reset();
 
   // F) create a CSV output file [5]
   chmu::csv::parallel::work(thread_pool, stations);
   timer.lap("CSV with fluctuations written.");
+
+  latch_E.wait();
+
+  total_time.lap("Program finished!");
 }
 
 int main(int argc, char **argv) {
