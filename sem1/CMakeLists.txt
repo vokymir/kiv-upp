@@ -19,7 +19,7 @@ file(GLOB_RECURSE SOURCES
 # main executable
 add_executable(${PROJECT_NAME} ${SOURCES})
 
-# 'dumb' parallelism used at some places, make some std functions parallel
+# 'embarrassing' parallelism used at some places
 find_package(TBB REQUIRED)
 target_link_libraries(upp_sp1 PRIVATE TBB::tbb)
 
