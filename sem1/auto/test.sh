@@ -18,7 +18,7 @@ git checkout "$commit"
 
 for ((i=1; i<=RUNS; i++)); do
 echo "Run $i" | tee -a "$outfile"
-./auto/run --large --parallel >> "$outfile"
+./auto/run.sh --large --parallel >> "$outfile"
 done
 }
 
