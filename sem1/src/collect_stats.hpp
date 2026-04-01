@@ -28,4 +28,12 @@ void station_means(Stats &stats);
 
 } // namespace serial
 
+namespace parallel {
+
+// calculate all stats for all stations - uses embarrassing parallelism for it's
+// work, reusing serial functions
+void work(std::vector<Station> &stations);
+
+} // namespace parallel
+
 } // namespace chmu::stats

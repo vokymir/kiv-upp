@@ -1,7 +1,9 @@
 #include "collect_stats.hpp"
 #include "model/model.hpp"
+#include "model/station.hpp"
 #include <algorithm>
 #include <cstddef>
+#include <execution>
 #include <iterator>
 #include <numeric>
 #include <ranges>
@@ -87,5 +89,14 @@ void station_means(Stats &stats) {
 }
 
 } // namespace serial
+
+namespace parallel {
+
+void work(std::vector<Station> &stations) {
+  std::for_each(std::execution::par, stations.begin(), stations.end(),
+                [](Station &st) { serial::station(st); });
+}
+
+} // namespace parallel
 
 } // namespace chmu::stats
