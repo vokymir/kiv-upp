@@ -91,7 +91,7 @@ void serial_version(const std::string_view &stations_path,
   timer.lap("Data filtered.");
 
   // C) work on big data [3]
-  chmu::collect_stats__serial(stations);
+  chmu::stats::serial::work(stations);
   timer.lap("Monthly averages computed.");
 
   // D) identify fluctuation [2]
@@ -122,7 +122,7 @@ void parallel_version(const std::string_view &stations_path,
   timer.lap("Data filtered.");
 
   // C) work on big data [3]
-  chmu::collect_stats__serial(stations);
+  chmu::stats::serial::work(stations);
   timer.lap("Monthly averages computed.");
 
   // D) identify fluctuation [2]

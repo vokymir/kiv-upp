@@ -5,15 +5,17 @@
 #include <iterator>
 #include <numeric>
 #include <ranges>
-namespace chmu {
+namespace chmu::stats {
 
-void collect_stats__serial(std::vector<Station> &stations) {
+namespace serial {
+
+void work(std::vector<Station> &stations) {
   for (auto &st : stations) {
-    collect_stats_station__serial(st);
+    station(st);
   }
 }
 
-void collect_stats_station__serial(Station &station) {
+void station(Station &station) {
   auto &measurements = station.measurements_const();
 
   // grouping by one particular month
@@ -25,16 +27,16 @@ void collect_stats_station__serial(Station &station) {
 
   // store month average for each month
   for (auto month_view : month_year_groups) {
-    collect_stats_station_month__serial(station, month_view);
+    station_month(station, month_view);
   }
 
-  collect_stats_station_minmax__serial(station.stats());
+  station_minmax(station.stats());
 
   // final - calculate mean
-  collect_stats_station_means__serial(station.stats());
+  station_means(station.stats());
 }
 
-void collect_stats_station_month__serial(Station &station, auto month_view) {
+void station_month(Station &station, auto month_view) {
   // get month from first element - doesn't matter from which
   auto date = month_view.front().date();
   int month = date.month_;
@@ -54,7 +56,7 @@ void collect_stats_station_month__serial(Station &station, auto month_view) {
   station.stats().monthly_series_[month - 1].add(avg, year);
 }
 
-void collect_stats_station_minmax__serial(Stats &stats) {
+void station_minmax(Stats &stats) {
   for (size_t i = 0; i < 12; ++i) {
     for (const auto ma : stats.monthly_series_[i].values) {
       stats.monthly_min_[i] = std::min(stats.monthly_min_[i], ma.value);
@@ -66,7 +68,7 @@ void collect_stats_station_minmax__serial(Stats &stats) {
   }
 }
 
-void collect_stats_station_means__serial(Stats &stats) {
+void station_means(Stats &stats) {
   for (size_t i = 0; i < 12; ++i) {
     const auto &series = stats.monthly_series_[i].values;
 
@@ -84,4 +86,6 @@ void collect_stats_station_means__serial(Stats &stats) {
   }
 }
 
-} // namespace chmu
+} // namespace serial
+
+} // namespace chmu::stats

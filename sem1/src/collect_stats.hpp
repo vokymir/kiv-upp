@@ -2,24 +2,30 @@
 
 #include "model/model.hpp"
 #include <vector>
-namespace chmu {
+namespace chmu::stats {
+
+namespace serial {
 
 // compute avg,min,max,etc for all stations, for all years, for all months -
 // complete set
-void collect_stats__serial(std::vector<Station> &stations);
+void work(std::vector<Station> &stations);
 
 // compute stats for one station, all years&months
-void collect_stats_station__serial(Station &station);
+void station(Station &station);
 
 // fill month_series for one station, one month, one year
 // the month_view must contain all measurements from one particular year and
 // month
-void collect_stats_station_month__serial(Station &station, auto month_view);
+void station_month(Station &station, auto month_view);
 
 // calculate montly/global min/max for one station with filled month_series
-void collect_stats_station_minmax__serial(Stats &stats);
+// NOTE: require station_month to be run before
+void station_minmax(Stats &stats);
 
 // compute all means in one station
-void collect_stats_station_means__serial(Stats &stats);
+// NOTE: require station_month to be run before
+void station_means(Stats &stats);
 
-} // namespace chmu
+} // namespace serial
+
+} // namespace chmu::stats
