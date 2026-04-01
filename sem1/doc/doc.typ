@@ -1,6 +1,8 @@
 #import "@preview/basic-report:0.4.0": *
 #import "@preview/fletcher:0.5.8" as fletcher: diagram, node, edge
 
+#set math.equation(numbering: "1.")
+
 #show ref: it => {
   if it.element.func() == heading {
     let loc = it.element.location()
@@ -142,6 +144,21 @@ tedy obsahuje obě verze - jak sériovou, tak paralelní!* Příklad:
 
 = Analýza problému
 
+V této kapitole je primárně rozebírán problem paralelizace, tedy ne jak
+implementovat samotné řešení, ale jak jej paralelizovat a optimalizovat.
+Na úvod této kapitoly je ale nezbytné zmínit některé důležité skutečnosti.
+
+- Řešení všech dílčích problémů bude snažší, pokud jsou data seřazená - stanice
+  podle svých identifikačních čísel uloženy do vektoru, měření podle pořadového
+  čísla. Nebude problém pracovat nad daty takovým způsobem, aby se jim neměnilo
+  pořadí. Je tedy důležité načíst data ve správném pořadí, případně je po
+  načtení seřadit.
+  - #sym.arrow Zaveden předpoklad, že načítaná data jsou pěkná - správně
+    seřazená. Tento předpoklad byl experimentálně ověřen pro danou množinu dat.
+    Pro jakákoliv další data by nemusel platit.
+
+== Paralelizace úloh
+
 Úlohu si můžeme rozdělit na podproblémy:
 
 #set enum(numbering: "A")
@@ -203,6 +220,18 @@ table(
   caption: [Seznam identifikovaných úloh včetně jejich vstupů a výstupů.]
 )<tab:tasks-in-out>
 
+Na základě znalostí uvedených v @fig:precedence a @tab:tasks-in-out očekáváme,
+že úloha je alespoň částečně paralelizovatelná na úrovni podúloh, a to ve fázi
+následující po podproblému C (výpočet statistik).
+
+=== Kritická cesta
+
+Pro nalezení kritické cesty použijeme standardní algoritmus, jehož provedení je
+znázorněno v @fig:critical-path-serial (do grafu byly uměle přidány body startu
+a konce běhu programu). Pro hledání byly použity zprůměrované
+časy jednotlivých úloh v sériovém řešení (může se lišit od časů v paralelní
+verzi).
+
 #figure(
   caption: "Kritická cesta podle časů získaných pomocí sériové verze, časy v
   milisekundách. Kritická cesta je vyznačená červenou barvou.",
@@ -235,17 +264,53 @@ table(
 ) <fig:critical-path-serial>
 
 
-info: vsechny inputy checknuty, vsechny jsou very fajny - tak na to budeme
-spolehat
+== Datový paralelismus
 
-vyhral ebe... ultimate parallel commit na cachyOS
+Všechny úlohy (A-F) lze paralelizovat, například pomocí cyklů. Následuje
+analýza, jakým způsobem paralelizovat konkrétní úlohy spolu s původním sériovým
+řešením v @tab:tasks-comparison.
 
-Řešení všech dílčích problémů bude snažší, pokud jsou data seřazená - stanice
-podle svých identifikačních čísel uloženy do vektoru, měření podle pořadového
-čísla. Nebude problém pracovat nad daty (B-F) takovým způsobem, aby se jim
-neměnilo pořadí. Je tedy důležité načíst data ve správném pořadí, případně je po
-načtení seřadit.
+#figure(
+table(
+  columns: (auto, auto, auto),
+  align: horizon+center,
+  [*Úloha*], [*Sériová verze*], [*Paralelní verze*],
 
-Důležitý předpoklad 
+  [A - Načtení dat], [Načtení celého souboru do bufferu, následné procházení
+    bufferu a načítání do struktur.], [Po načtení bufferu jej rozdělit podle
+    počtu jader, každé načítá část.],
 
+  [B - Filtrace], [Sekvenční kontrola všech stanic pomocí nezávislých funkcí.],
+    [Využití trapného paralelismu (funkcí standardní knihovny), rozdělení stanic
+    mezi jádra.],
 
+  [C - Statistiky], [Výpočty průměrů, minimálních a maximálních hodnot jsou na
+    sobě mezi stanicemi nezávislé, vykonávají se sekvenčně.], [Trapný
+    paralelismus, rozdělení stanic mezi jádra.],
+
+  [D - Výkyvy], [Detekce výkyvů na sobě mezi stanicemi nezávislá, vykonává se
+    sekvenčně.], [Trapný paralelismus, rozdělení stanic mezi jádra.],
+
+  [E - SVG mapy], [Cyklus pro všechny měsíce, každý zakreslí všechny stanice.], 
+    [Trapný paralelismus, rozdělení měsíců mezi jádra. Nedojde ke konfliktu,
+    protože každé jádro píše do jednoho souboru a ze stanic pouze čte.],
+
+  [F - zápis CSV], [Prochází všechny stanice a zapisuje jejich výkyvy do
+    souboru.], [Rozdělení stanic mezi jádra, připravují řetězec k zapsání, které
+    proběhne poté na jednom jádře.],
+),
+  caption: [Seznam identifikovaných úloh včetně jejich vstupů a výstupů.]
+)<tab:tasks-comparison>
+
+== Teoretické urychlení
+
+Potřeba načíst soubor, filtrovat a provádět výpočty ukazuje na skutečnost, že v
+programu existuje nezanedbatelná sekvenční část.
+
+Amdahlovův zákon definuje urychlení jako:
+
+$
+S_#text("lat") = 1 / ((1 - p) + p / s)
+$ <eq:ahmdal>
+
+kde 
