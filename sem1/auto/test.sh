@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-RUNS=10
+RUNS=100
 
 bench_commit() {
 local commit=$1
@@ -22,8 +22,8 @@ echo "Run $i" | tee -a "$outfile"
 done
 }
 
-bench_commit e4a24ea2 ~/school/results_ebe568c8.txt
-bench_commit 9641384f ~/school/results_5ca306aa.txt
+bench_commit e4a24ea2 ~/school/ultimate.txt
+bench_commit 9641384f ~/school/chill.txt
 
 # go back to previous branch
 
