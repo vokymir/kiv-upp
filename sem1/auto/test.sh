@@ -22,8 +22,8 @@ echo "Run $i" | tee -a "$outfile"
 done
 }
 
-bench_commit ebe568c8 ~/school/results_ebe568c8.txt
-bench_commit 5ca306aa ~/school/results_5ca306aa.txt
+bench_commit e4a24ea2 ~/school/results_ebe568c8.txt
+bench_commit 9641384f ~/school/results_5ca306aa.txt
 
 # go back to previous branch
 
