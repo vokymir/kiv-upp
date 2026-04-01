@@ -103,7 +103,7 @@ void serial_version(const std::string_view &stations_path,
   timer.lap("Draw SVG maps.");
 
   // F) create a CSV output file [5]
-  chmu::write_csv__serial(stations);
+  chmu::csv::serial::work(stations);
   timer.lap("CSV with fluctuations written.");
 }
 
@@ -134,7 +134,7 @@ void parallel_version(const std::string_view &stations_path,
   timer.lap("Draw SVG maps.");
 
   // F) create a CSV output file [5]
-  chmu::write_csv__serial(stations);
+  chmu::csv::parallel::work(thread_pool, stations);
   timer.lap("CSV with fluctuations written.");
 }
 
