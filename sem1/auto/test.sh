@@ -27,4 +27,4 @@ bench_commit 5ca306aa ~/school/results_5ca306aa.txt
 
 # go back to previous branch
 
-git switch -
+git checkout master
