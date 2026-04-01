@@ -244,22 +244,22 @@ verzi).
     node((0,2), [C: výpočty #linebreak()
       #box(fill:red.lighten(60%), inset: 2pt)[22 110 | 22 110]], name: <C>),
     node((-1,3), [D: identifikace výkyvů #linebreak()
-      #box(fill:red.lighten(60%), inset: 2pt)[24 510 | 24 510]], name: <D>),
+      #box(fill:blue.lighten(60%), inset: 2pt)[24 510 | 24 515]], name: <D>),
     node((1,3), [E: export SVG map #linebreak()
-      #box(fill:blue.lighten(60%), inset: 2pt)[22 310 | 24 525]], name: <E>),
+      #box(fill:red.lighten(60%), inset: 2pt)[24 510 | 24 510]], name: <E>),
     node((-1,4), [F: zápis výkyvů do CSV #linebreak()
-      #box(fill:red.lighten(60%), inset: 2pt)[24 525 | 24 525]], name: <F>),
+      #box(fill:blue.lighten(60%), inset: 2pt)[24 690 | 24 695]], name: <F>),
     node((0,5), [END #linebreak()
-      #box(fill:red.lighten(60%), inset: 2pt)[24 525 | 24 525]], name: <END>),
+      #box(fill:red.lighten(60%), inset: 2pt)[24 710 | 24 710]], name: <END>),
 
     edge(<START>, <A>, "->"),
     edge(<A>, <B>, "->", stroke: red, label: "22 000"),
     edge(<B>, <C>, "->", stroke: red, label: "110"),
-    edge(<C>, <D>, "->", stroke: red, label: "2 400"),
-    edge(<C>, <E>, "->", stroke: blue, label: "200"),
-    edge(<D>, <F>, "->", stroke: red, label: "15"),
-    edge(<F>, <END>, "->", stroke: red, label: ""),
-    edge(<E>, <END>, "->", stroke: blue, label: ""),
+    edge(<C>, <D>, "->", stroke: blue, label: "2 400"),
+    edge(<C>, <E>, "->", stroke: red, label: "2 400"),
+    edge(<D>, <F>, "->", stroke: blue, label: "180"),
+    edge(<F>, <END>, "->", stroke: blue, label: "15"),
+    edge(<E>, <END>, "->", stroke: red, label: "200"),
   )
 ) <fig:critical-path-serial>
 
@@ -299,13 +299,13 @@ table(
     souboru.], [Rozdělení stanic mezi jádra, připravují řetězec k zapsání, které
     proběhne poté na jednom jádře.],
 ),
-  caption: [Seznam identifikovaných úloh včetně jejich vstupů a výstupů.]
+  caption: [Shrnutí fungování sériové verze programu a navržení paralelní.]
 )<tab:tasks-comparison>
 
 == Teoretické urychlení
 
-Potřeba načíst soubor, filtrovat a provádět výpočty ukazuje na skutečnost, že v
-programu existuje nezanedbatelná sekvenční část.
+Předpokládejme, podle informací v @tab:tasks-comparison, že všechny úlohy mohou
+být paralelizované.
 
 Amdahlovův zákon definuje urychlení jako:
 
@@ -313,4 +313,27 @@ $
 S_#text("lat") = 1 / ((1 - p) + p / s)
 $ <eq:ahmdal>
 
-kde 
+kde $p$ je podíl čas běhu paralizovatelných úloh vůči všem úlohám,
+a $s$ je maximální možné urychlení.
+
+#figure(
+table(
+  columns: (auto, auto),
+  align: horizon+center,
+  [*Úloha*], [*Čas [ms] (sériová verze)*],
+
+  [A - Načtení dat], [22 000], 
+
+  [B - Filtrace], [110],
+
+  [C - Statistiky], [2 400],
+
+  [D - Výkyvy], [180], 
+
+  [E - SVG mapy], [200], 
+
+  [F - zápis CSV], [15], 
+),
+  caption: [Průměrné doby vykonávání jednotlivých úloh sériovým způsobem.]
+)<tab:tasks-timed-serial>
+
