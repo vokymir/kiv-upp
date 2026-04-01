@@ -95,7 +95,7 @@ void serial_version(const std::string_view &stations_path,
   timer.lap("Monthly averages computed.");
 
   // D) identify fluctuation [2]
-  chmu::identify_fluctuation__serial(stations);
+  chmu::flucs::serial::work(stations);
   timer.lap("Fluctuations identified.");
 
   // E) draw a map for each month [4]
@@ -126,7 +126,7 @@ void parallel_version(const std::string_view &stations_path,
   timer.lap("Monthly averages computed.");
 
   // D) identify fluctuation [2]
-  chmu::identify_fluctuation__serial(stations);
+  chmu::flucs::serial::work(stations);
   timer.lap("Fluctuations identified.");
 
   // E) draw a map for each month [4]
