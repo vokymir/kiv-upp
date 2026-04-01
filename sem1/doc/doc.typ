@@ -203,6 +203,36 @@ table(
   caption: [Seznam identifikovaných úloh včetně jejich vstupů a výstupů.]
 )<tab:tasks-in-out>
 
+#figure(
+  caption: "Kritická cesta podle časů získaných pomocí sériové verze, časy v
+  milisekundách. Kritická cesta je vyznačená červenou barvou.",
+  diagram(
+    node((0, -1), [START], name: <START>),
+    node((0,0), [A: čtení #linebreak()
+      #box(fill:red.lighten(60%), inset: 2pt)[0 | 0]], name: <A>),
+    node((0,1), [B: filtrace #linebreak()
+      #box(fill:red.lighten(60%), inset: 2pt)[22 000 | 22 000]], name: <B>),
+    node((0,2), [C: výpočty #linebreak()
+      #box(fill:red.lighten(60%), inset: 2pt)[22 110 | 22 110]], name: <C>),
+    node((-1,3), [D: identifikace výkyvů #linebreak()
+      #box(fill:red.lighten(60%), inset: 2pt)[24 510 | 24 510]], name: <D>),
+    node((1,3), [E: export SVG map #linebreak()
+      #box(fill:blue.lighten(60%), inset: 2pt)[22 310 | 24 525]], name: <E>),
+    node((-1,4), [F: zápis výkyvů do CSV #linebreak()
+      #box(fill:red.lighten(60%), inset: 2pt)[24 525 | 24 525]], name: <F>),
+    node((0,5), [END #linebreak()
+      #box(fill:red.lighten(60%), inset: 2pt)[24 525 | 24 525]], name: <END>),
+
+    edge(<START>, <A>, "->"),
+    edge(<A>, <B>, "->", stroke: red, label: "22 000"),
+    edge(<B>, <C>, "->", stroke: red, label: "110"),
+    edge(<C>, <D>, "->", stroke: red, label: "2 400"),
+    edge(<C>, <E>, "->", stroke: blue, label: "200"),
+    edge(<D>, <F>, "->", stroke: red, label: "15"),
+    edge(<F>, <END>, "->", stroke: red, label: ""),
+    edge(<E>, <END>, "->", stroke: blue, label: ""),
+  )
+) <fig:critical-path-serial>
 
 
 info: vsechny inputy checknuty, vsechny jsou very fajny - tak na to budeme
