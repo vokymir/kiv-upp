@@ -307,13 +307,15 @@ table(
 Předpokládejme, podle informací v @tab:tasks-comparison, že všechny úlohy mohou
 být paralelizované.
 
+=== Amdahlův zákon
+
 Amdahlovův zákon definuje urychlení jako:
 
 $
 S_#text("lat") = 1 / ((1 - p) + p / s)
-$ <eq:ahmdal>
+$ <eq:amdhal>
 
-kde $p$ je podíl čas běhu paralizovatelných úloh vůči všem úlohám,
+kde $p$ je podíl čas běhu paralizovatelných úloh vůči všem úlohám
 a $s$ je maximální možné urychlení.
 
 #figure(
@@ -333,7 +335,71 @@ table(
   [E - SVG mapy], [200], 
 
   [F - zápis CSV], [15], 
+
+  [*Celkem*], [*24 905*]
 ),
   caption: [Průměrné doby vykonávání jednotlivých úloh sériovým způsobem.]
 )<tab:tasks-timed-serial>
 
+
+Podle předpokladu, že všechny úlohy jsou paralelizovatelné, z
+@tab:tasks-timed-serial vidíme, že $p = (sum_A^F (t)) / 24905 = 1$ a řekneme, že $s
+= #text("#jader") = 8$. Po dosazení do rovnice dostáváme:
+
+$
+S_#text("lat") = 1 / ((1 - 1) + 1 / 8) = 8
+$ <eq:amdhal-solved>
+
+Z @eq:amdhal-solved vidíme, že teoretické maximální zrychlení je 800%. To
+odpovídá naivnímu předpokladu, že se všechny úlohy podaří rozdělit mezi osm
+jader.
+
+=== Gustafsonův zákon
+
+Definován jako:
+
+$
+S = (1 - a)P + a
+$ <eq:gustafson>
+
+kde $a$ je podíl sériové části kódu a
+$P$ je počet procesorových jader.
+
+Pro náš předpoklad, že je celý program paralelizovatelný, dostáváme $a = 0$.
+
+$
+S = (1 - 0) 8 + 0 = 8
+$ <eq:gustafson-solved>
+
+= Návrh a implementace paralelizace
+
+= Měření a zhodnocení
+
+== Konfigurace testovacího prostředí
+
+Referenční měření a testování škálovatelnosti probíhalo na stroji s následující konfigurací:
+- *CPU:* Intel(R) Core(TM) i5-1035G1 CPU @ 1.00GHz, 4 fyzická / 8 logických
+  jader
+- *RAM:* 8 GB DDR4
+- *OS:* CachyOS (Linux)
+- *Překladač:* GCC 15.2.1
+
+== Naměřené časy
+
+Pro měření byla použita velká datová sada (`velke_mereni.csv`).
+
+== Metriky paralelizace
+
+Na základě celkových časů můžeme vypočítat základní metriky s využitím $p = 8$ vláken.
+
+*Dosažené urychlení (Speedup):*
+$ S = T_s / T_p =  /  approx  $
+
+*Efektivita (Efficiency):*
+$ E = S / p =  / 8 approx  quad ( %) $
+
+*Amdahlův zákon:*
+
+*Gustafsonův zákon (škálované urychlení):*
+
+= Závěr
