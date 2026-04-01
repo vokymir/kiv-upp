@@ -240,26 +240,26 @@ verzi).
     node((0,0), [A: čtení #linebreak()
       #box(fill:red.lighten(60%), inset: 2pt)[0 | 0]], name: <A>),
     node((0,1), [B: filtrace #linebreak()
-      #box(fill:red.lighten(60%), inset: 2pt)[22 000 | 22 000]], name: <B>),
+      #box(fill:red.lighten(60%), inset: 2pt)[6 000 | 6 000]], name: <B>),
     node((0,2), [C: výpočty #linebreak()
-      #box(fill:red.lighten(60%), inset: 2pt)[22 110 | 22 110]], name: <C>),
+      #box(fill:red.lighten(60%), inset: 2pt)[6 110 | 6 110]], name: <C>),
     node((-1,3), [D: identifikace výkyvů #linebreak()
-      #box(fill:blue.lighten(60%), inset: 2pt)[24 510 | 24 515]], name: <D>),
+      #box(fill:blue.lighten(60%), inset: 2pt)[6 218 | 6 225]], name: <D>),
     node((1,3), [E: export SVG map #linebreak()
-      #box(fill:red.lighten(60%), inset: 2pt)[24 510 | 24 510]], name: <E>),
+      #box(fill:red.lighten(60%), inset: 2pt)[6 218 | 6 218]], name: <E>),
     node((-1,4), [F: zápis výkyvů do CSV #linebreak()
-      #box(fill:blue.lighten(60%), inset: 2pt)[24 690 | 24 695]], name: <F>),
+      #box(fill:blue.lighten(60%), inset: 2pt)[6 221 | 6 228]], name: <F>),
     node((0,5), [END #linebreak()
-      #box(fill:red.lighten(60%), inset: 2pt)[24 710 | 24 710]], name: <END>),
+      #box(fill:red.lighten(60%), inset: 2pt)[6 243 | 6 243]], name: <END>),
 
     edge(<START>, <A>, "->"),
-    edge(<A>, <B>, "->", stroke: red, label: "22 000"),
+    edge(<A>, <B>, "->", stroke: red, label: "6 000"),
     edge(<B>, <C>, "->", stroke: red, label: "110"),
-    edge(<C>, <D>, "->", stroke: blue, label: "2 400"),
-    edge(<C>, <E>, "->", stroke: red, label: "2 400"),
-    edge(<D>, <F>, "->", stroke: blue, label: "180"),
+    edge(<C>, <D>, "->", stroke: blue, label: "108"),
+    edge(<C>, <E>, "->", stroke: red, label: "108"),
+    edge(<D>, <F>, "->", stroke: blue, label: "3"),
     edge(<F>, <END>, "->", stroke: blue, label: "15"),
-    edge(<E>, <END>, "->", stroke: red, label: "200"),
+    edge(<E>, <END>, "->", stroke: red, label: "25"),
   )
 ) <fig:critical-path-serial>
 
@@ -324,19 +324,19 @@ table(
   align: horizon+center,
   [*Úloha*], [*Čas [ms] (sériová verze)*],
 
-  [A - Načtení dat], [22 000], 
+  [A - Načtení dat], [6 000], 
 
   [B - Filtrace], [110],
 
-  [C - Statistiky], [2 400],
+  [C - Statistiky], [108],
 
-  [D - Výkyvy], [180], 
+  [D - Výkyvy], [3], 
 
-  [E - SVG mapy], [200], 
+  [E - SVG mapy], [25], 
 
   [F - zápis CSV], [15], 
 
-  [*Celkem*], [*24 905*]
+  [*Celkem*], [*6 261*]
 ),
   caption: [Průměrné doby vykonávání jednotlivých úloh sériovým způsobem.]
 )<tab:tasks-timed-serial>
@@ -375,14 +375,39 @@ $ <eq:gustafson-solved>
 
 = Měření a zhodnocení
 
+#figure(
+table(
+  columns: (auto, auto, auto),
+  align: horizon+center,
+  [*Úloha*], [*Čas [ms] (sériová verze)*], [*Čas [ms] (paralelní verze)*],
+
+  [A - Načtení dat], [6 000], [3 500],
+
+  [B - Filtrace], [110], [69],
+
+  [C - Statistiky], [108], [33],
+
+  [D - Výkyvy], [3], [1],
+
+  [E - SVG mapy], [25], [18],
+
+  [F - zápis CSV], [15], [4],
+
+  [*Celkem*], [*6 261*], [*3 625*],
+),
+  caption: [Průměrné doby vykonávání jednotlivých úloh.]
+)<tab:tasks-timed>
+
 == Konfigurace testovacího prostředí
 
-Referenční měření a testování škálovatelnosti probíhalo na stroji s následující konfigurací:
+Referenční měření probíhalo na stroji s následující konfigurací:
+
 - *CPU:* Intel(R) Core(TM) i5-1035G1 CPU @ 1.00GHz, 4 fyzická / 8 logických
   jader
 - *RAM:* 8 GB DDR4
 - *OS:* CachyOS (Linux)
 - *Překladač:* GCC 15.2.1
+  - Release mode (`-O3`)
 
 == Naměřené časy
 
