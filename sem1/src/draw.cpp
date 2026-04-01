@@ -3,9 +3,11 @@
 #include "model/model.hpp"
 #include <algorithm>
 #include <array>
+#include <execution>
 #include <format>
 #include <fstream>
 #include <iterator>
+#include <ranges>
 #include <string>
 #include <vector>
 namespace chmu::draw {
@@ -118,5 +120,22 @@ void write_month(const std::vector<Point> &points, int month_1_indexed) {
 }
 
 } // namespace serial
+
+namespace parallel {
+
+void work(const std::vector<Station> &stations) {
+  const auto range = get_temperature_range(stations);
+
+  // iterate over all 12 months (1-indexed)
+  const auto months = std::views::iota(1, 13);
+
+  std::for_each(std::execution::par, months.begin(), months.end(),
+                [&range, &stations](int month) {
+                  auto pts = serial::prepare_month(stations, month, range);
+                  serial::write_month(std::move(pts), month);
+                });
+}
+
+} // namespace parallel
 
 } // namespace chmu::draw

@@ -45,4 +45,11 @@ void write_month(const std::vector<Point> &points, int month_1_indexed);
 
 } // namespace serial
 
+namespace parallel {
+
+// use embarrassing parallelism to process each month in parallel
+void work(const std::vector<Station> &stations);
+
+} // namespace parallel
+
 } // namespace chmu::draw
