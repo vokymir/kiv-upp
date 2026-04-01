@@ -56,6 +56,14 @@ else()
     )
 endif()
 
+# fast release
+target_compile_options(${PROJECT_NAME} PRIVATE
+    $<$<CONFIG:Release>:
+        -O3
+        -march=native
+    >
+)
+
 # set binaries dir for output
 set_target_properties(${PROJECT_NAME} PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/bin"
