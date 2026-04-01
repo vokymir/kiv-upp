@@ -176,14 +176,13 @@ std::vector<Station> only_stations(::parallel::Thread_Pool &thread_pool,
       auto &out = stations_pool[i];
       std::vector<Station> local_stations;
 
-      std::string_view sv_chunk(chunk);
       std::string_view line;
 
       if (i == 0) { // skip header
-        get_until(sv_chunk, line, '\n');
+        get_until(chunk, line, '\n');
       }
 
-      while (get_until(sv_chunk, line, '\n')) {
+      while (get_until(chunk, line, '\n')) {
         if (line.empty()) {
           continue;
         }
@@ -232,14 +231,13 @@ void only_measurements(::parallel::Thread_Pool &thread_pool,
       auto &out = measurements_pool[i];
       std::vector<std::vector<Measurement>> local_mesurements(stations.size());
 
-      std::string_view sv_chunk(chunk);
       std::string_view line;
 
       if (i == 0) { // skip header
-        get_until(sv_chunk, line, '\n');
+        get_until(chunk, line, '\n');
       }
 
-      while (get_until(sv_chunk, line, '\n')) {
+      while (get_until(chunk, line, '\n')) {
         if (line.empty()) {
           continue;
         }
