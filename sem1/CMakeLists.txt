@@ -19,6 +19,10 @@ file(GLOB_RECURSE SOURCES
 # main executable
 add_executable(${PROJECT_NAME} ${SOURCES})
 
+# 'dumb' parallelism used at some places, make some std functions parallel
+find_package(TBB REQUIRED)
+target_link_libraries(upp_sp1 PRIVATE TBB::tbb)
+
 # strict debug
 if(MSVC)
     target_compile_options(${PROJECT_NAME} PRIVATE

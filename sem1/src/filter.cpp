@@ -1,10 +1,12 @@
 
 #include "filter.hpp"
 #include "model/model.hpp"
+#include <algorithm>
 #include <chrono>
 #include <cstddef>
+#include <execution>
 #include <vector>
-namespace chmu {
+namespace chmu::filter {
 
 // 5 years
 // WARN: no leap years included
@@ -58,9 +60,26 @@ bool should_keep_station(const Station &st) {
   return have_enough_values_on_average(mes) && have_enough_continuous_data(mes);
 }
 
-void filter__serial(std::vector<Station> &stations) {
+namespace serial {
+
+void work(std::vector<Station> &stations) {
 
   std::erase_if(stations, [](Station &st) { return !should_keep_station(st); });
 }
 
-} // namespace chmu
+} // namespace serial
+
+namespace parallel {
+
+void work(std::vector<Station> &stations) {
+
+  auto it = std::remove_if(
+      std::execution::par, stations.begin(), stations.end(),
+      [](const Station &st) { return !should_keep_station(st); });
+
+  stations.erase(it, stations.end());
+}
+
+} // namespace parallel
+
+} // namespace chmu::filter

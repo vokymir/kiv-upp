@@ -87,7 +87,7 @@ void serial_version(const std::string_view &stations_path,
   timer.lap("Data loaded.");
 
   // B) pre-process data (=filtration) [1]
-  chmu::filter__serial(stations);
+  chmu::filter::serial::work(stations);
   timer.lap("Data filtered.");
 
   // C) work on big data [3]
@@ -118,7 +118,7 @@ void parallel_version(const std::string_view &stations_path,
   timer.lap("Data loaded.");
 
   // B) pre-process data (=filtration) [1]
-  chmu::filter__serial(stations);
+  chmu::filter::parallel::work(stations);
   timer.lap("Data filtered.");
 
   // C) work on big data [3]
