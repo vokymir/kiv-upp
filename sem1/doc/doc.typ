@@ -371,9 +371,42 @@ $
 S = (1 - 0) 8 + 0 = 8
 $ <eq:gustafson-solved>
 
-= Návrh a implementace paralelizace
+= Implementace paralelizace
 
-TODO
+Pro účely paralelizace úlohy A (načítání dat) a F (zápis do CSV) byl vytvořen
+jednoduchý vláknový rybníček. V úloze A se 
+
+#set enum(numbering: "1.")
++ načetla všechna data do řetězcového bufferu
++ každé vlákno dostalo stejně velkou část bufferu ke zpracování
++ po skončení práce všech vláken se výsledky načtení v hlavním vlákně spojily.
+
+Každé vlákno používá lokální vektor, po dokončení práce všech se vektory propíší
+do hlavního. Nezměnění pořadí dat je zajištěno tím, že každé vlákno zná index
+své práce (např. 3. část z 8) a na tom indexu i ukládá svou práci do
+bufferovacího vektoru. Poté stačí do hlavního vektoru přepisovat práci ve
+stejném pořadí, v jakém ji vlákna zpracovaly.
+
+Bylo by mohlo být efektivnější použít k signalizaci semafor pro každé vlákno -
+tím pádem by hlavní vlákno nečekalo na dokončení všech prací, ale pouze první
+(pak by proběhl merge), následně druhé atd. Ze dvou důvodů však byla použitá
+past (latch).
+
+#set enum(numbering: "1.")
++ jednoduchost/přehlednost kódu
++ každé vlákno má přibližně stejně velkou práci, předpoklad, že ji dokončí v
+  podobném čase
+
+V úloze F se podobným způsobem mezi vlákna rozdělila práce sbírání dat ze
+stanic. Následně se v sériové části do souboru zapisovaly větší části textu, než
+pouhé řádky (tak je to v sériové verzi).
+
+Úlohy B, C, D, E jsou všechny trapně paralelní a tedy byly použité funkce
+`parallel STL`, konkrétně `for_each(std::execution::par, ...)` a v úloze
+B `std::remove_if(std::execution::par, ...)`. V úlohách B, C, D se
+paralelizovalo vzhledem ke stanicím (existují funkce pro zpracování jedné
+stanice a v sériové verzi se akorát tato funkce volala ve smyčce pro všechny
+stanice), zatímco v úloze E (svg mapy) se paralelizovalo vzhledem k měsícům.
 
 = Experimentálně zjištěné výsledky
 
