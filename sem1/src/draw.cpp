@@ -1,5 +1,6 @@
 
 #include "draw.hpp"
+#include "czmap.hpp"
 #include "model/model.hpp"
 #include <algorithm>
 #include <array>
@@ -98,12 +99,7 @@ std::vector<Point> prepare_month(const std::vector<Station> &stations,
 void write_month(const std::vector<Point> &points, int month_1_indexed) {
   int month = month_1_indexed - 1;
 
-  std::string svg;
-  { // load svg "template"
-    std::ifstream file("./src/czmap.svg");
-    svg = std::string(std::istreambuf_iterator<char>(file),
-                      std::istreambuf_iterator<char>());
-  }
+  std::string svg = CZ_SVG_MAP;
 
   auto pos = svg.find("</svg>");
 

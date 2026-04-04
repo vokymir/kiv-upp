@@ -1,3 +1,6 @@
+#pragma once
+
+constexpr const char *CZ_SVG_MAP = R"SVG(
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <svg
    xmlns:dc="http://purl.org/dc/elements/1.1/"
@@ -176,3 +179,4 @@
      stroke-width="2.5944"
      id="path82" />
  </svg>
+)SVG";
