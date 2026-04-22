@@ -19,7 +19,7 @@ int master() {
   // registrace callbacku pro zpracovani odeslanych URL
   // these shananigans are only to avoid global state/config which would hold
   // M and N
-  svr.RegisterFormCallback(_detail::process);
+  svr.RegisterFormCallback(_detail::process_master);
 
   // spusteni serveru
   return svr.Run() ? EXIT_SUCCESS : EXIT_FAILURE;
@@ -28,33 +28,42 @@ int master() {
 void non_master(int rank) {
 
   if (cfg::is_worker_A(rank)) {
-    A();
+    A(rank);
 
   } else {
-    B();
+    B(rank);
   }
 }
 
-void A() {
+void A(int rank) {
 
   while (true) {
 
-    int employer = MPI_ANY_SOURCE;
+    int employer = cfg::employer(rank);
     std::string url = utils::mpi::recv_string(employer, _detail::TAG_URL);
 
-    // TODO: PROCESS using B, stack & queue etc
+    _detail::Result_A result = _detail::process_A(url);
 
-    std::string result = "Zpracoval jsem: " + url;
-
-    utils::mpi::send_string(result, employer, _detail::TAG_RESULT);
+    // TODO: send result of A to master
+    // utils::mpi::send_string(result, employer, _detail::TAG_RESULT_A);
   }
 }
 
-void B() {}
+void B(int rank) {
+
+  while (true) {
+    int employer = cfg::employer(rank);
+    std::string url = utils::mpi::recv_string(employer, _detail::TAG_URL);
+
+    _detail::Result_B result = _detail::process_B(url);
+
+    // TODO: send result of B to A
+  }
+}
 
 namespace _detail {
 
-void process(const std::vector<std::string> &urls, std::string &output) {
+void process_master(const std::vector<std::string> &urls, std::string &output) {
 
   // divide the work
   for (int i = 0; i < static_cast<int>(urls.size()); ++i) {
@@ -66,8 +75,8 @@ void process(const std::vector<std::string> &urls, std::string &output) {
   output = "Zadali jste: <ul>";
 
   for (int i = 0; i < urls.size(); i++) {
-    int src = MPI_ANY_SOURCE;
-    std::string res = utils::mpi::recv_string(src, TAG_RESULT);
+    int src = MPI_ANY_SOURCE; // might be cfg::assign_A(i) - and that is precise
+    std::string res = utils::mpi::recv_string(src, TAG_RESULT_A);
     output += res + "<br/>";
   }
 

@@ -37,4 +37,25 @@ inline bool is_worker_B(int rank) {
 
 inline int assign_A(int i) { return idx_A_first() + (i % N); }
 
+inline int employer(int rank) {
+  if (is_master(rank)) {
+    return -1;
+
+  } else if (is_worker_A(rank)) {
+    return idx_master();
+
+  } else if (is_worker_B(rank)) {
+    int idx = rank - idx_B_first();
+    // integer division = floor
+    int group = idx / M;
+    // group is 0-indexed, so it works
+    int employer = group + idx_A_first();
+
+    return employer;
+
+  } else {
+    return -2;
+  }
+}
+
 } // namespace cfg
