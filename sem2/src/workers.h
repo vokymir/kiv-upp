@@ -74,10 +74,9 @@ inline std::string LOG_str(LOG severity) {
   return "UNKNOWN";
 }
 
-inline void log(std::vector<Log_Entry> &log, LOG severity,
-                std::string_view msg) {
+inline void log(std::vector<Log_Entry> &log, LOG severity, std::string msg) {
   log.push_back({std::chrono::system_clock::now(),
-                 std::format("{}: {}", LOG_str(severity), std::string{msg})});
+                 std::format("{}: {}", LOG_str(severity), std::move(msg))});
 }
 
 struct Result_A {
@@ -106,6 +105,20 @@ void process_master(const std::vector<std::string> &urls, std::string &output);
 
 // actually do the work in A
 Result_A process_A(int rank, const std::string &url);
+
+// extract just the domain from URL
+// "http://test.cz/portal/info" -> "http://test.cz"
+// return EMPTY STRING on failure
+std::string get_domain(const std::string &url);
+
+// converts ANY href link into absolute URL based on the current page
+// return EMPTY STRING on failure
+std::string resolve_link(const std::string &current_url,
+                         const std::string &href);
+
+// is the found link valid and should it be probed later?
+bool valid_link(const std::string &base_url, const std::string &current_url,
+                const std::string &found_url);
 
 // after the work in A is done, join all the results into Result_A
 void join_results_A(Result_A &r,

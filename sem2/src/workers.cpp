@@ -7,6 +7,7 @@
 #include <mpi.h>
 #include <queue>
 #include <string_view>
+#include <unordered_set>
 namespace worker {
 
 int master() {
@@ -141,6 +142,7 @@ void process_master(const std::vector<std::string> &urls, std::string &output) {
 Result_A process_A(int rank, const std::string &original_url) {
   Result_A r;
   std::unordered_map<std::string, Result_B> processed;
+  std::unordered_set<std::string> in_progress;
   std::queue<std::string> queue;
 
   queue.push(original_url);
@@ -161,28 +163,25 @@ Result_A process_A(int rank, const std::string &original_url) {
                       "done/sent: {}/{}",
                       rank, worker, done, sent));
 
-      // if one page is processed multiple times, don't do duplicates
-      // (it might happen if links to that page are found before it is
-      // processed)
-      if (processed.contains(res.page.url)) {
-        log(r.log, LOG::WARN,
-            std::format("[A {}] Throwing out duplicate page {}", rank,
-                        res.page.url));
-        continue;
-      }
       processed[res.page.url] = res;
+      in_progress.erase(res.page.url);
 
-      // enqueue found pages
+      // filter found pages and enque them for further search
+      std::vector<std::string> filtered;
       for (const auto &found_url : res.found_pages) {
-        log(r.log, LOG::INFO,
-            std::format("[A {}] Might enque {}", rank, found_url));
-        // only if it already isn't done
-        if (!processed.contains(found_url)) {
+        bool doneish =
+            (processed.contains(found_url) || in_progress.contains(found_url));
+
+        if (valid_link(original_url, res.page.url, found_url) && !doneish) {
           log(r.log, LOG::INFO,
-              std::format("[A {}] Enquing {}", rank, found_url));
+              std::format("[A {}] Enqueuing {}", rank, found_url));
+
           queue.push(found_url);
+          filtered.push_back(found_url);
         }
       }
+
+      res.found_pages = std::move(filtered);
     }
 
     // flush the queue to workers
@@ -192,6 +191,7 @@ Result_A process_A(int rank, const std::string &original_url) {
 
       int worker = cfg::assign_B(rank, sent++);
       utils::mpi::send_string(url, worker, TAG_URL);
+      in_progress.insert(url);
       log(r.log, LOG::INFO,
           std::format("[A {}] Sent to worker {} page {}", rank, worker, url));
     }
@@ -203,6 +203,85 @@ Result_A process_A(int rank, const std::string &original_url) {
       std::format("[A {}] Ending page processing", rank)); // end
 
   return r;
+}
+
+std::string get_domain(const std::string &url) {
+  size_t pos = url.find("://");
+
+  if (pos == std::string::npos) {
+    return ""; // must have protocol
+  }
+
+  // the first slash after "://"
+  pos = url.find('/', pos + 3);
+
+  if (pos == std::string::npos) {
+    return url; // eg. "https://google.com" - without trailing slash
+  }
+
+  return url.substr(0, pos); // no trailing slash
+}
+
+std::string resolve_link(const std::string &current_url,
+                         const std::string &link) {
+  // skip empty links, anchors, or javascript
+  if (link.empty() || link.starts_with("#") ||
+      link.starts_with("javascript:")) {
+    return "";
+  }
+
+  // CASE 1
+
+  // already absolute URL
+  if (link.starts_with("http://") || link.starts_with("https://")) {
+    return link;
+  }
+
+  // CASE 2
+
+  // relative link from root (starts with '/')
+  // example:
+  // current =  http://test.cz/portal/info
+  // link =     /about
+  // ->         http://test.cz/about
+  if (link.starts_with("/")) {
+    return get_domain(current_url) + link;
+  }
+
+  // CASE 3
+
+  // relative link
+  // example:
+  // current =  http://test.cz/portal/info
+  // link =     contact.html
+  // ->         http://test.cz/portal/contact.html
+  size_t last_slash = current_url.rfind('/');
+  size_t domain_end = get_domain(current_url).size();
+
+  // the url ends with slash
+  if (current_url.ends_with('/')) {
+    return current_url + link;
+  }
+
+  // the url has a path, but no trailing slash
+  // example:
+  // current =  http://test.cz/portal/info
+  // link =     contact.html
+  // ->         http://test.cz/portal/contact.html
+  if (last_slash != std::string::npos && last_slash >= domain_end) {
+    return current_url.substr(0, last_slash + 1) + link;
+  }
+
+  // the only slashes are in "http://"
+  // example: http://test.cz
+  return current_url + "/" + link;
+}
+
+bool valid_link(const std::string &base_url, const std::string &current_url,
+                const std::string &found_url) {
+  std::string absolute_link = resolve_link(current_url, found_url);
+
+  return !absolute_link.empty() && absolute_link.starts_with(base_url);
 }
 
 void join_results_A(
@@ -250,13 +329,9 @@ Result_B process_B(int rank, const std::string &url) {
   r.page.links = links.size();
 
   // fill all found links
+  // filtering is done on A
   for (const auto &link_pos : links) {
     std::string link = find_href(contents_sv, link_pos);
-    // skip invalid links and that which leads to another domain
-    if (link.empty() || !link.starts_with(url)) {
-      log(r.log, LOG::INFO, std::format("[B {}] Skipping link {}", rank, link));
-      continue;
-    }
   }
 
   // fill all found headings
