@@ -41,7 +41,7 @@ void A() {
 
   while (true) {
 
-    int employer = 0;
+    int employer = MPI_ANY_SOURCE;
     std::string url = utils::mpi::recv_string(employer, _detail::TAG_URL);
 
     // TODO: PROCESS using B, stack & queue etc
