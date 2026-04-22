@@ -169,15 +169,21 @@ Result_A process_A(int rank, const std::string &original_url) {
       // filter found pages and enque them for further search
       std::vector<std::string> filtered;
       for (const auto &found_url : res.found_pages) {
-        bool doneish =
-            (processed.contains(found_url) || in_progress.contains(found_url));
+        std::string abs_url = resolve_link(res.page.url, found_url);
 
-        if (valid_link(original_url, res.page.url, found_url) && !doneish) {
+        bool already_seen =
+            (processed.contains(abs_url) || in_progress.contains(abs_url));
+
+        if (!already_seen &&
+            valid_link(original_url, res.page.url, found_url)) {
           log(r.log, LOG::INFO,
               std::format("[A {}] Enqueuing {}", rank, found_url));
 
           queue.push(found_url);
           filtered.push_back(found_url);
+        } else {
+          log(r.log, LOG::INFO,
+              std::format("[A {}] NOT enqueuing {}", rank, found_url));
         }
       }
 
@@ -328,10 +334,14 @@ Result_B process_B(int rank, const std::string &url) {
   auto links = find_occurences(r.log, contents_sv, "<a");
   r.page.links = links.size();
 
-  // fill all found links
+  // fill all nonempty found links
   // filtering is done on A
   for (const auto &link_pos : links) {
     std::string link = find_href(contents_sv, link_pos);
+
+    if (!link.empty()) {
+      r.found_pages.push_back(link);
+    }
   }
 
   // fill all found headings
@@ -354,13 +364,41 @@ std::vector<size_t> find_occurences(std::vector<Log_Entry> &log_,
 
   while ((pos = s.find(word, pos)) != std::string_view::npos) {
     log(log_, LOG::INFO,
-        std::format("[B] Looking for {}, now position {}", std::string{word},
+        std::format("[B] Looking for {}, now position {}", escape_html(word),
                     pos));
     occs.push_back(pos);
     pos += len; // skip the word
   }
 
   return occs;
+}
+
+std::string escape_html(std::string_view str) {
+  std::string buffer;
+  buffer.reserve(str.size());
+  for (size_t pos = 0; pos != str.size(); ++pos) {
+    switch (str[pos]) {
+    case '&':
+      buffer.append("&amp;");
+      break;
+    case '\"':
+      buffer.append("&quot;");
+      break;
+    case '\'':
+      buffer.append("&apos;");
+      break;
+    case '<':
+      buffer.append("&lt;");
+      break;
+    case '>':
+      buffer.append("&gt;");
+      break;
+    default:
+      buffer.push_back(str[pos]);
+      break;
+    }
+  }
+  return buffer;
 }
 
 std::string find_href(std::string_view s, size_t pos) {

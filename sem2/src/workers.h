@@ -132,6 +132,9 @@ Result_B process_B(int rank, const std::string &url);
 std::vector<size_t> find_occurences(std::vector<Log_Entry> &log,
                                     std::string_view s, std::string_view word);
 
+// rewrite eg '<' to &lt, so it renders correctly
+std::string escape_html(std::string_view str);
+
 // find the contents of href="..." inside a tag
 std::string find_href(std::string_view s, size_t pos);
 
