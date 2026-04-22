@@ -5,11 +5,12 @@
 namespace crawl::worker {
 
 // return value = program return value
+// run the server
 int master();
 
-void master_process(const std::vector<std::string> &urls, std::string &output);
-
-void non_master(int rank, int argc, char **argv);
+// decide based on rank, N and M
+// if A or B should run
+void non_master(int rank, int N, int M);
 
 void A();
 
@@ -17,8 +18,9 @@ void B();
 
 namespace _detail {
 
-std::tuple<int, int> parse_args(int argc, char **argv);
+// process list of URLs using MPI and write informative html into output
+void process(const std::vector<std::string> &urls, std::string &output);
 
-}
+} // namespace _detail
 
 } // namespace crawl::worker

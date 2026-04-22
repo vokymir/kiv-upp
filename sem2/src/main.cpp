@@ -5,6 +5,7 @@
 
 #include <mpi.h>
 
+#include "utils.h"
 #include "workers.h"
 
 int main(int argc, char **argv) {
@@ -16,10 +17,12 @@ int main(int argc, char **argv) {
   MPI_Comm_size(MPI_COMM_WORLD, &size);
 
   int retval = EXIT_SUCCESS;
+  auto [N, M] = utils::parse_args(argc, argv);
+
   if (rank == 0) {
     retval = crawl::worker::master();
   } else {
-    crawl::worker::non_master(rank, argc, argv);
+    crawl::worker::non_master(rank, N, M);
   }
 
   MPI_Finalize();

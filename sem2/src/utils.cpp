@@ -12,6 +12,28 @@
 
 namespace utils {
 
+std::tuple<int, int> parse_args(int argc, char **argv) {
+
+  int N = -1, M = -1;
+
+  for (int i = 1; i < argc; ++i) {
+    std::string arg = argv[i - 1];
+
+    if (arg == "-n") {
+      N = std::stoi(argv[i]);
+
+    } else if (arg == "-m") {
+      M = std::stoi(argv[i]);
+    }
+  }
+
+  if (N <= 0 || M <= 0) {
+    throw std::runtime_error("Unspecified/Wrong arguments for -n and/or -m.");
+  }
+
+  return {N, M};
+}
+
 std::string readWholeFile(const std::string &path) {
   // otevreni souboru
   std::ifstream ifs(path);

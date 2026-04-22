@@ -5,11 +5,14 @@
 
 #pragma once
 
-#include <fstream>
-#include <sstream>
 #include <string>
 
 namespace utils {
+
+// return {N, M} from the args
+// may THROW on invalid args
+std::tuple<int, int> parse_args(int argc, char **argv);
+
 // precte cely soubor do retezce
 // path - cesta k souboru
 // vraci obsah souboru nebo prazdny retezec v pripade chyby

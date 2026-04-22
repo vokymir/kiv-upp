@@ -14,26 +14,13 @@ int master() {
   }
 
   // registrace callbacku pro zpracovani odeslanych URL
-  svr.RegisterFormCallback(master_process);
+  svr.RegisterFormCallback(_detail::process);
 
   // spusteni serveru
   return svr.Run() ? EXIT_SUCCESS : EXIT_FAILURE;
 }
 
-void master_process(const std::vector<std::string> &urls, std::string &output) {
-
-  // TODO
-
-  output = "Zadali jste: <ul>";
-  for (const auto &url : urls) {
-    output += "<li>" + url + "</li>";
-  }
-  output += "</ul>";
-}
-
-void non_master(int rank, int argc, char **argv) {
-
-  auto [N, M] = _detail::parse_args(argc, argv);
+void non_master(int rank, int N, int M) {
 
   if (rank <= N) {
     A();
@@ -49,26 +36,15 @@ void B() {}
 
 namespace _detail {
 
-std::tuple<int, int> parse_args(int argc, char **argv) {
+void process(const std::vector<std::string> &urls, std::string &output) {
 
-  int N = -1, M = -1;
+  // TODO
 
-  for (int i = 1; i < argc; ++i) {
-    std::string arg = argv[i - 1];
-
-    if (arg == "-n") {
-      N = std::stoi(argv[i]);
-
-    } else if (arg == "-m") {
-      M = std::stoi(argv[i]);
-    }
+  output = "Zadali jste: <ul>";
+  for (const auto &url : urls) {
+    output += "<li>" + url + "</li>";
   }
-
-  if (N <= 0 || M <= 0) {
-    throw std::runtime_error("Unspecified/Wrong arguments for -n and/or -m.");
-  }
-
-  return {N, M};
+  output += "</ul>";
 }
 
 } // namespace _detail
