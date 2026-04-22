@@ -166,14 +166,15 @@ Result_A process_A(int rank, const std::string &original_url) {
                       rank, worker, done, sent));
 
       // remove from in_progress, add to processed and get reference to it
+      in_progress.erase(res.page.url);
       auto [it, inserted] = processed.emplace(res.page.url, std::move(res));
       if (!inserted) {
         log(r.log, LOG::ERROR,
             std::format("[A {}] The page already exist: {}", rank,
                         res.page.url));
+        continue;
       }
       auto &stored = it->second;
-      in_progress.erase(res.page.url);
 
       // filter found pages and enque them for further search
       std::vector<std::string> filtered;
@@ -253,6 +254,46 @@ std::string get_domain(const std::string &url) {
   return url.substr(0, pos); // no trailing slash
 }
 
+std::string normalize_path(const std::string &path) {
+  std::vector<std::string> parts;
+  size_t pos = 0;
+
+  while (pos < path.size()) {
+    size_t next_pos = path.find('/', pos);
+    if (next_pos == std::string::npos) {
+      next_pos = path.size();
+    }
+
+    std::string part = path.substr(pos, next_pos - pos);
+
+    // increment for next round
+    pos = next_pos + 1;
+
+    // allow double slash in path
+    if (part.empty()) {
+      continue;
+    }
+
+    if (part == "..") {
+      parts.pop_back();
+
+    } else if (part != ".") {
+      parts.push_back(part);
+    }
+  }
+
+  std::string result = "/";
+  for (size_t k = 0; k < parts.size(); ++k) {
+    result += parts[k];
+
+    if (k + 1 < parts.size()) {
+      result += "/";
+    }
+  }
+
+  return result;
+}
+
 std::string resolve_link(const std::string &current_url,
                          const std::string &link) {
   // skip empty links, anchors, or javascript
@@ -261,14 +302,17 @@ std::string resolve_link(const std::string &current_url,
     return "";
   }
 
-  // CASE 1
+  // ABSOLUTE
 
   // already absolute URL
   if (link.starts_with("http://") || link.starts_with("https://")) {
     return link;
   }
 
-  // CASE 2
+  // RELATIVE
+
+  std::string domain = get_domain(current_url);
+  std::string full;
 
   // relative link from root (starts with '/')
   // example:
@@ -276,36 +320,44 @@ std::string resolve_link(const std::string &current_url,
   // link =     /about
   // ->         http://test.cz/about
   if (link.starts_with("/")) {
-    return get_domain(current_url) + link;
+    full = domain + link;
+
+    // relative link
+    // example:
+    // current =  http://test.cz/portal/info
+    // link =     contact.html
+    // ->         http://test.cz/portal/contact.html
+  } else {
+    size_t last_slash = current_url.rfind('/');
+
+    // have trailing slash
+    if (current_url.ends_with('/')) {
+      full = current_url + link;
+
+      // the url has a path, but no trailing slash
+      // example:
+      // current =  http://test.cz/portal/info
+      // link =     contact.html
+      // ->         http://test.cz/portal/contact.html
+    } else if (last_slash != std::string::npos && last_slash >= domain.size()) {
+      full = current_url.substr(0, last_slash + 1) + link;
+
+      // the only slashes are in "://"
+      // example: https://github.com
+    } else {
+      full = current_url + "/" + link;
+    }
   }
 
-  // CASE 3
+  // NORMALIZE the path, no matter its origin
 
-  // relative link
-  // example:
-  // current =  http://test.cz/portal/info
-  // link =     contact.html
-  // ->         http://test.cz/portal/contact.html
-  size_t last_slash = current_url.rfind('/');
-  size_t domain_end = get_domain(current_url).size();
-
-  // the url ends with slash
-  if (current_url.ends_with('/')) {
-    return current_url + link;
+  size_t path_start = full.find('/', domain.size());
+  if (path_start == std::string::npos) {
+    return full;
   }
 
-  // the url has a path, but no trailing slash
-  // example:
-  // current =  http://test.cz/portal/info
-  // link =     contact.html
-  // ->         http://test.cz/portal/contact.html
-  if (last_slash != std::string::npos && last_slash >= domain_end) {
-    return current_url.substr(0, last_slash + 1) + link;
-  }
-
-  // the only slashes are in "http://"
-  // example: http://test.cz
-  return current_url + "/" + link;
+  std::string path = full.substr(path_start);
+  return domain + normalize_path(path);
 }
 
 bool valid_link(const std::string &base_url, const std::string &current_url,

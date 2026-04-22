@@ -116,6 +116,9 @@ std::string trim(const std::string &s);
 // return EMPTY STRING on failure
 std::string get_domain(const std::string &url);
 
+// from url path, resolve . and ..
+std::string normalize_path(const std::string &path);
+
 // converts ANY href link into absolute URL based on the current page
 // return EMPTY STRING on failure
 std::string resolve_link(const std::string &current_url,
