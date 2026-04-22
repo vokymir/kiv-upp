@@ -22,4 +22,16 @@ std::string readWholeFile(const std::string &path);
 // url - adresa stranky
 // vraci obsah stranky nebo prazdny retezec v pripade chyby
 std::string downloadHTML(const std::string &url);
+
+namespace mpi {
+
+// send any string to some MPI worker
+void send_string(const std::string &s, int dest, int tag);
+
+// receive a string
+// IF src is MPI_ANY_SOURCE, it will be filled with actual worker ID
+std::string recv_string(int &src, int tag);
+
+} // namespace mpi
+
 } // namespace utils

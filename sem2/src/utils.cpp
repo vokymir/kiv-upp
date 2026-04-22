@@ -9,6 +9,7 @@
 #include "../dep/cpp-httplib/httplib.h"
 
 #include "utils.h"
+#include <mpi.h>
 
 namespace utils {
 
@@ -86,5 +87,33 @@ std::string downloadHTML(const std::string &url) {
 
   return res->body;
 }
+
+namespace mpi {
+
+void send_string(const std::string &s, int dest, int tag) {
+  int len = static_cast<int>(s.size());
+
+  MPI_Send(&len, 1, MPI_INT, dest, tag, MPI_COMM_WORLD);
+  MPI_Send(s.c_str(), len, MPI_CHAR, dest, tag, MPI_COMM_WORLD);
+}
+
+std::string recv_string(int &src, int tag) {
+  MPI_Status status;
+  int len;
+
+  MPI_Recv(&len, 1, MPI_INT, src, tag, MPI_COMM_WORLD, &status);
+
+  // caller didn't know the source - now they do!
+  if (src == MPI_ANY_SOURCE) {
+    src = status.MPI_SOURCE;
+  }
+
+  std::string msg(len, '\0');
+  MPI_Recv(&msg[0], len, MPI_CHAR, src, tag, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+
+  return msg;
+}
+
+} // namespace mpi
 
 } // namespace utils
