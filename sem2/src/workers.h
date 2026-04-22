@@ -67,6 +67,13 @@ Result_A process_A(int rank, const std::string &url);
 
 Result_B process_B(int rank, const std::string &url);
 
+// find positions of all occurences of word inside s
+std::vector<size_t> find_occurences(std::string_view s,
+                                    const std::string &word);
+
+// find the contents of href="..." inside a tag
+std::string find_href(std::string_view s, size_t pos);
+
 } // namespace _detail
 
 } // namespace worker
