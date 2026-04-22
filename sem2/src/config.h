@@ -35,8 +35,24 @@ inline bool is_worker_B(int rank) {
 
 // == ACTIONABLE GETTERS ==
 
+// only master can assign work to A
+// i is some iteration, for fair distribution
 inline int assign_A(int i) { return idx_A_first() + (i % N); }
 
+// only A can assign work to B
+// i is some iteration, so it is fairly distributed
+inline int assign_B(int rank_A, int i) {
+  // how much offset because of A
+  int offset_of_A_group = (rank_A - idx_A_first()) * M;
+  // start index of A's group
+  int start_of_group = idx_B_first() + offset_of_A_group;
+  // don't overshoot the group
+  int employee = start_of_group + (i % M);
+
+  return employee;
+}
+
+// who to send direct message if I am done? whom to listen to?
 inline int employer(int rank) {
   if (is_master(rank)) {
     return -1;

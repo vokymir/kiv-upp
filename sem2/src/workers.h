@@ -52,6 +52,7 @@ struct Result_A {
 };
 
 struct Result_B {
+  std::string url;
   int imgs;
   int links;
   int forms;
@@ -62,9 +63,9 @@ struct Result_B {
 // process list of URLs using MPI and write informative html into output
 void process_master(const std::vector<std::string> &urls, std::string &output);
 
-Result_A process_A(const std::string &url);
+Result_A process_A(int rank, const std::string &url);
 
-Result_B process_B(const std::string &url);
+Result_B process_B(int rank, const std::string &url);
 
 } // namespace _detail
 
