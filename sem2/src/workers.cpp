@@ -98,8 +98,7 @@ Result_A process_A(int rank, const std::string &original_url) {
     // receive all enqueued work and fill the queue with new
     while (done < sent) {
       int worker = cfg::assign_B(rank, done++);
-      // TODO: receive from worker
-      Result_B res = {};
+      Result_B res = utils::mpi::recv_result_B(worker);
 
       // if one page is processed multiple times, don't do duplicates
       // (it might happen if links to that page are found before it is
