@@ -3,6 +3,7 @@
  * Soubory a hlavicku upravujte dle sveho uvazeni a nutnosti
  */
 
+#include "workers.h"
 #ifdef USE_SSL
 #define CPPHTTPLIB_OPENSSL_SUPPORT
 #endif
@@ -90,28 +91,70 @@ std::string downloadHTML(const std::string &url) {
 
 namespace mpi {
 
+void send_int(int num, int dest, int tag) {
+  MPI_Send(&num, 1, MPI_INT, dest, tag, MPI_COMM_WORLD);
+}
+
+int recv_int(int &src, int tag) {
+  MPI_Status status;
+  int num;
+
+  MPI_Recv(&num, 1, MPI_INT, src, tag, MPI_COMM_WORLD, &status);
+  if (src == MPI_ANY_SOURCE) {
+    src = status.MPI_SOURCE;
+  }
+
+  return num;
+}
+
 void send_string(const std::string &s, int dest, int tag) {
   int len = static_cast<int>(s.size());
 
-  MPI_Send(&len, 1, MPI_INT, dest, tag, MPI_COMM_WORLD);
+  send_int(len, dest, tag);
   MPI_Send(s.c_str(), len, MPI_CHAR, dest, tag, MPI_COMM_WORLD);
 }
 
 std::string recv_string(int &src, int tag) {
-  MPI_Status status;
-  int len;
-
-  MPI_Recv(&len, 1, MPI_INT, src, tag, MPI_COMM_WORLD, &status);
-
-  // caller didn't know the source - now they do!
-  if (src == MPI_ANY_SOURCE) {
-    src = status.MPI_SOURCE;
-  }
+  int len = recv_int(src, tag);
 
   std::string msg(len, '\0');
   MPI_Recv(&msg[0], len, MPI_CHAR, src, tag, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 
   return msg;
+}
+
+void send_result_B(const worker::_detail::Result_B &r, int dest) {
+  int tag = worker::_detail::TAG_RESULT_B;
+
+  // = URL
+  send_string(r.url, dest, tag);
+
+  // = INTEGERS
+  send_int(r.imgs, dest, tag);
+  send_int(r.links, dest, tag);
+  send_int(r.forms, dest, tag);
+
+  // = FOUND PAGES
+  send_vector<std::string>(r.found_pages, dest, tag, send_string);
+}
+
+worker::_detail::Result_B recv_result_B(int &src) {
+  int tag = worker::_detail::TAG_RESULT_B;
+
+  worker::_detail::Result_B r;
+
+  // = URL
+  r.url = recv_string(src, tag);
+
+  // = INTEGERS
+  r.imgs = recv_int(src, tag);
+  r.links = recv_int(src, tag);
+  r.forms = recv_int(src, tag);
+
+  // = FOUND PAGES
+  r.found_pages = recv_vector<std::string>(src, tag, recv_string);
+
+  return r;
 }
 
 } // namespace mpi
