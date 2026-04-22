@@ -208,6 +208,13 @@ Result_A process_A(int rank, const std::string &original_url) {
       std::string url = queue.front();
       queue.pop();
 
+      // must be here, because we don't watch what is in queue
+      bool already_seen =
+          (processed.contains(url) || in_progress.contains(url));
+      if (already_seen) {
+        continue;
+      }
+
       int worker = cfg::assign_B(rank, sent++);
       utils::mpi::send_string(url, worker, TAG_URL);
       in_progress.insert(url);
