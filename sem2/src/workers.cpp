@@ -85,10 +85,12 @@ void process_master(const std::vector<std::string> &urls, std::string &output) {
 }
 
 Result_A process_A(int rank, const std::string &original_url) {
+  Result_A r;
   std::unordered_map<std::string, Result_B> processed;
   std::queue<std::string> queue;
 
   queue.push(original_url);
+  log(r.log, ""); // start
 
   int sent = 0;
   int done = 0;
@@ -103,10 +105,10 @@ Result_A process_A(int rank, const std::string &original_url) {
       // if one page is processed multiple times, don't do duplicates
       // (it might happen if links to that page are found before it is
       // processed)
-      if (processed.contains(res.url)) {
+      if (processed.contains(res.page.url)) {
         continue;
       }
-      processed[res.url] = res;
+      processed[res.page.url] = res;
 
       // enqueue found pages
       for (const auto &found_url : res.found_pages) {
@@ -127,8 +129,30 @@ Result_A process_A(int rank, const std::string &original_url) {
     }
   }
 
-  // TODO: join results to get Result_A
-  return {};
+  join_results_A(r, processed);
+
+  log(r.log, ""); // end
+
+  return r;
+}
+
+void join_results_A(
+    Result_A &r, const std::unordered_map<std::string, Result_B> &processed) {
+  r.contents.reserve(processed.size());
+  r.graph.uris.reserve(processed.size());
+
+  for (const auto &[url, res] : processed) {
+
+    // Page_Content already done by B
+    r.contents.push_back(res.page);
+
+    // Website_Graph almost done by B
+    r.graph.uris.push_back(url);
+
+    for (const auto &target : res.found_pages) {
+      r.graph.refs.push_back({url, target});
+    }
+  }
 }
 
 Result_B process_B(int rank, const std::string &url) {
@@ -136,12 +160,12 @@ Result_B process_B(int rank, const std::string &url) {
 
   std::string contents = utils::downloadHTML(url);
 
-  r.url = url;
-  r.imgs = find_occurences(contents, "<img").size();
-  r.forms = find_occurences(contents, "<form").size();
+  r.page.url = url;
+  r.page.imgs = find_occurences(contents, "<img").size();
+  r.page.forms = find_occurences(contents, "<form").size();
 
   auto links = find_occurences(contents, "<a");
-  r.links = links.size();
+  r.page.links = links.size();
 
   // fill all found links
   for (const auto &link_pos : links) {
@@ -150,6 +174,14 @@ Result_B process_B(int rank, const std::string &url) {
     if (link.empty() || !link.starts_with(url)) {
       continue;
     }
+  }
+
+  // fill all found headings
+  auto headings = find_occurences(contents, "<h");
+  for (const auto &heading_pos : headings) {
+    auto heading = find_heading(contents, heading_pos);
+    // TODO: validation
+    r.page.headings.push_back(heading);
   }
 
   return r;
@@ -186,6 +218,21 @@ std::string find_href(std::string_view s, size_t pos) {
   }
 
   return std::string(s.substr(link_start_pos, link_end_pos - link_start_pos));
+}
+
+// TODO: validation after finds
+Heading find_heading(std::string_view s, size_t pos) {
+  Heading h;
+  size_t depth_pos = pos + 2; // to skip "<h"
+  size_t start_pos = s.find(">", pos) + 1;
+  size_t end_pos = s.find("</h", pos);
+
+  char d = s[depth_pos];
+  h.depth = d - '0';
+
+  h.text = std::string(s.substr(start_pos, end_pos - start_pos));
+
+  return h;
 }
 
 } // namespace _detail

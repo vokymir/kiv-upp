@@ -127,12 +127,12 @@ void send_result_B(const worker::_detail::Result_B &r, int dest) {
   int tag = worker::_detail::TAG_RESULT_B;
 
   // = URL
-  send_string(r.url, dest, tag);
+  send_string(r.page.url, dest, tag);
 
   // = INTEGERS
-  send_int(r.imgs, dest, tag);
-  send_int(r.links, dest, tag);
-  send_int(r.forms, dest, tag);
+  send_int(r.page.imgs, dest, tag);
+  send_int(r.page.links, dest, tag);
+  send_int(r.page.forms, dest, tag);
 
   // = FOUND PAGES
   send_vector<std::string>(r.found_pages, dest, tag, send_string);
@@ -144,12 +144,12 @@ worker::_detail::Result_B recv_result_B(int &src) {
   worker::_detail::Result_B r;
 
   // = URL
-  r.url = recv_string(src, tag);
+  r.page.url = recv_string(src, tag);
 
   // = INTEGERS
-  r.imgs = recv_int(src, tag);
-  r.links = recv_int(src, tag);
-  r.forms = recv_int(src, tag);
+  r.page.imgs = recv_int(src, tag);
+  r.page.links = recv_int(src, tag);
+  r.page.forms = recv_int(src, tag);
 
   // = FOUND PAGES
   r.found_pages = recv_vector<std::string>(src, tag, recv_string);
