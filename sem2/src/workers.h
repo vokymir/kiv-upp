@@ -1,6 +1,7 @@
 #pragma once
 
 #include <chrono>
+#include <print>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -75,8 +76,9 @@ inline std::string LOG_str(LOG severity) {
 }
 
 inline void log(std::vector<Log_Entry> &log, LOG severity, std::string msg) {
-  log.push_back({std::chrono::system_clock::now(),
-                 std::format("{}: {}", LOG_str(severity), std::move(msg))});
+  std::string m = std::format("{}: {}", LOG_str(severity), std::move(msg));
+  log.push_back({std::chrono::system_clock::now(), m});
+  std::println("{}", m);
 }
 
 struct Result_A {
@@ -132,8 +134,7 @@ void join_results_A(Result_A &r,
 Result_B process_B(int rank, const std::string &url);
 
 // find positions of all occurences of word inside s
-std::vector<size_t> find_occurences(std::vector<Log_Entry> &log,
-                                    std::string_view s, std::string_view word);
+std::vector<size_t> find_occurences(std::string_view s, std::string_view word);
 
 // rewrite eg '<' to &lt, so it renders correctly
 std::string escape_html(std::string_view str);

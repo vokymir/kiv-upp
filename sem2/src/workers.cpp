@@ -345,7 +345,7 @@ void join_results_A(
 Result_B process_B(int rank, const std::string &url) {
   Result_B r;
   log(r.log, LOG::INFO,
-      std::format("[B {}] Got work now, url = {}", rank, url));
+      std::format("[B {}] Starts working now, url = {}", rank, url));
 
   const std::string contents = utils::downloadHTML(url);
   const std::string_view contents_sv{contents.data(), contents.size()};
@@ -357,10 +357,10 @@ Result_B process_B(int rank, const std::string &url) {
   }
 
   r.page.url = url;
-  r.page.imgs = find_occurences(r.log, contents_sv, "<img").size();
-  r.page.forms = find_occurences(r.log, contents_sv, "<form").size();
+  r.page.imgs = find_occurences(contents_sv, "<img").size();
+  r.page.forms = find_occurences(contents_sv, "<form").size();
 
-  auto links = find_occurences(r.log, contents_sv, "<a");
+  auto links = find_occurences(contents_sv, "<a");
   r.page.links = links.size();
 
   // fill all nonempty found links
@@ -374,27 +374,25 @@ Result_B process_B(int rank, const std::string &url) {
   }
 
   // fill all found headings
-  auto headings = find_occurences(r.log, contents_sv, "<h");
+  auto headings = find_occurences(contents_sv, "<h");
   for (const auto &heading_pos : headings) {
     auto heading = find_heading(contents_sv, heading_pos);
     // TODO: validation
     r.page.headings.push_back(heading);
   }
 
+  log(r.log, LOG::INFO,
+      std::format("[B {}] Done working now, url = {}", rank, url));
   return r;
 }
 
-std::vector<size_t> find_occurences(std::vector<Log_Entry> &log_,
-                                    std::string_view s, std::string_view word) {
+std::vector<size_t> find_occurences(std::string_view s, std::string_view word) {
   std::vector<size_t> occs;
 
   size_t pos = 0;
   size_t len = word.size();
 
   while ((pos = s.find(word, pos)) != std::string_view::npos) {
-    log(log_, LOG::INFO,
-        std::format("[B] Looking for {}, now position {}", escape_html(word),
-                    pos));
     occs.push_back(pos);
     pos += len; // skip the word
   }
