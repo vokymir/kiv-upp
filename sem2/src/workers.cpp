@@ -67,7 +67,7 @@ namespace _detail {
 
 void render_html(const Result_A &r, std::string &output) {
   output += "<li>";
-  output += "<h3>Root URL: " + r.contents[0].url + "</h3>";
+  output += "<h3>Root URL: " + r.contents[r.contents.size() - 1].url + "</h3>";
 
   // pages
   output += "<h4>Pages</h4><ul>";
@@ -165,17 +165,24 @@ Result_A process_A(int rank, const std::string &original_url) {
                       "done/sent: {}/{}",
                       rank, worker, done, sent));
 
-      processed[res.page.url] = res;
+      // remove from in_progress, add to processed and get reference to it
+      auto [it, inserted] = processed.emplace(res.page.url, std::move(res));
+      if (!inserted) {
+        log(r.log, LOG::ERROR,
+            std::format("[A {}] The page already exist: {}", rank,
+                        res.page.url));
+      }
+      auto &stored = it->second;
       in_progress.erase(res.page.url);
 
       // filter found pages and enque them for further search
       std::vector<std::string> filtered;
-      for (const auto &found_url : res.found_pages) {
-        std::string abs_url = resolve_link(res.page.url, found_url);
+      for (const auto &found_url : stored.found_pages) {
+        std::string abs_url = resolve_link(stored.page.url, found_url);
 
         bool already_seen =
             (processed.contains(abs_url) || in_progress.contains(abs_url));
-        bool valid = valid_link(base_url, res.page.url, abs_url);
+        bool valid = valid_link(base_url, stored.page.url, abs_url);
 
         if (!already_seen && valid) {
           log(r.log, LOG::INFO,
@@ -183,6 +190,7 @@ Result_A process_A(int rank, const std::string &original_url) {
 
           queue.push(abs_url);
           filtered.push_back(abs_url);
+
         } else {
           log(r.log, LOG::INFO,
               std::format("[A {}] NOT enqueuing {}: {} {}", rank, abs_url,
@@ -191,7 +199,7 @@ Result_A process_A(int rank, const std::string &original_url) {
         }
       }
 
-      res.found_pages = std::move(filtered);
+      stored.found_pages = std::move(filtered);
     }
 
     // flush the queue to workers
