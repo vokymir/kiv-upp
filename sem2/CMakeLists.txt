@@ -1,5 +1,7 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.20)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 PROJECT(UPP_SP2)
 
 # pouzivame standard C++23 - pokud jej vas kompilator nepodporuje, zmente nejhure na 17 (C++17)
@@ -9,7 +11,7 @@ SET(CMAKE_CXX_STANDARD 23)
 FILE(GLOB_RECURSE src src/*.cpp src/*.h)
 
 # nastavime, ze nechceme pouzivat SSL ve vychozim stavu - pokud chcete, muzete zapnout, abyste se dostali na https
-SET(USE_SSL OFF CACHE BOOL "Use SSL")
+SET(USE_SSL ON CACHE BOOL "Use SSL")
 
 IF(USE_SSL)
 	ADD_DEFINITIONS(-DUSE_SSL)
@@ -22,6 +24,10 @@ ENDIF()
 INCLUDE_DIRECTORIES("dep/cpp-httplib")
 
 ADD_EXECUTABLE(UPP-SP2 ${src})
+
+# == MPI ==
+FIND_PACKAGE(MPI REQUIRED)
+TARGET_LINK_LIBRARIES(UPP-SP2 MPI::MPI_CXX)
 
 # pokud chceme pouzivat SSL, musime prilinkovat OpenSSL
 IF(USE_SSL)
