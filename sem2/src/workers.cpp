@@ -6,6 +6,7 @@
 #include <iostream>
 #include <mpi.h>
 #include <queue>
+#include <string_view>
 namespace worker {
 
 int master() {
@@ -143,7 +144,8 @@ Result_A process_A(int rank, const std::string &original_url) {
   std::queue<std::string> queue;
 
   queue.push(original_url);
-  log(r.log, LOG::INFO, std::format("[A] Start processing {}", original_url));
+  log(r.log, LOG::INFO,
+      std::format("[A {}] Start processing {}", rank, original_url));
 
   int sent = 0;
   int done = 0;
@@ -155,26 +157,29 @@ Result_A process_A(int rank, const std::string &original_url) {
       int worker = cfg::assign_B(rank, done++);
       Result_B res = utils::mpi::recv_result_B(worker);
       log(r.log, LOG::INFO,
-          std::format(
-              "[A] Received work from {}, the status is now done/sent: {}/{}",
-              worker, done, sent));
+          std::format("[A {}] Received done work from {}, the status is now "
+                      "done/sent: {}/{}",
+                      rank, worker, done, sent));
 
       // if one page is processed multiple times, don't do duplicates
       // (it might happen if links to that page are found before it is
       // processed)
       if (processed.contains(res.page.url)) {
         log(r.log, LOG::WARN,
-            std::format("[A] Throwing out duplicate page {}", res.page.url));
+            std::format("[A {}] Throwing out duplicate page {}", rank,
+                        res.page.url));
         continue;
       }
       processed[res.page.url] = res;
 
       // enqueue found pages
       for (const auto &found_url : res.found_pages) {
-        log(r.log, LOG::INFO, std::format("[A] Might enque {}", found_url));
+        log(r.log, LOG::INFO,
+            std::format("[A {}] Might enque {}", rank, found_url));
         // only if it already isn't done
         if (!processed.contains(found_url)) {
-          log(r.log, LOG::INFO, std::format("[A] Enquing {}", found_url));
+          log(r.log, LOG::INFO,
+              std::format("[A {}] Enquing {}", rank, found_url));
           queue.push(found_url);
         }
       }
@@ -188,13 +193,14 @@ Result_A process_A(int rank, const std::string &original_url) {
       int worker = cfg::assign_B(rank, sent++);
       utils::mpi::send_string(url, worker, TAG_URL);
       log(r.log, LOG::INFO,
-          std::format("[A] Sent to worker {} page {}", worker, url));
+          std::format("[A {}] Sent to worker {} page {}", rank, worker, url));
     }
   }
 
   join_results_A(r, processed);
 
-  log(r.log, LOG::INFO, "[A] Ending page processing"); // end
+  log(r.log, LOG::INFO,
+      std::format("[A {}] Ending page processing", rank)); // end
 
   return r;
 }
@@ -224,35 +230,39 @@ void join_results_A(
 
 Result_B process_B(int rank, const std::string &url) {
   Result_B r;
+  log(r.log, LOG::INFO,
+      std::format("[B {}] Got work now, url = {}", rank, url));
 
-  std::string contents = utils::downloadHTML(url);
+  const std::string contents = utils::downloadHTML(url);
+  const std::string_view contents_sv{contents.data(), contents.size()};
 
   if (contents.empty()) {
     log(r.log, LOG::ERROR,
-        std::format("[B] Cannot download HTML page {}", url));
+        std::format("[B {}] Cannot download HTML page {}", rank, url));
+    return r;
   }
 
   r.page.url = url;
-  r.page.imgs = find_occurences(contents, "<img").size();
-  r.page.forms = find_occurences(contents, "<form").size();
+  r.page.imgs = find_occurences(r.log, contents_sv, "<img").size();
+  r.page.forms = find_occurences(r.log, contents_sv, "<form").size();
 
-  auto links = find_occurences(contents, "<a");
+  auto links = find_occurences(r.log, contents_sv, "<a");
   r.page.links = links.size();
 
   // fill all found links
   for (const auto &link_pos : links) {
-    std::string link = find_href(contents, link_pos);
+    std::string link = find_href(contents_sv, link_pos);
     // skip invalid links and that which leads to another domain
     if (link.empty() || !link.starts_with(url)) {
-      log(r.log, LOG::INFO, std::format("[B] Skipping link {}", link));
+      log(r.log, LOG::INFO, std::format("[B {}] Skipping link {}", rank, link));
       continue;
     }
   }
 
   // fill all found headings
-  auto headings = find_occurences(contents, "<h");
+  auto headings = find_occurences(r.log, contents_sv, "<h");
   for (const auto &heading_pos : headings) {
-    auto heading = find_heading(contents, heading_pos);
+    auto heading = find_heading(contents_sv, heading_pos);
     // TODO: validation
     r.page.headings.push_back(heading);
   }
@@ -260,14 +270,17 @@ Result_B process_B(int rank, const std::string &url) {
   return r;
 }
 
-std::vector<size_t> find_occurences(std::string_view s,
-                                    const std::string &word) {
+std::vector<size_t> find_occurences(std::vector<Log_Entry> &log_,
+                                    std::string_view s, std::string_view word) {
   std::vector<size_t> occs;
 
-  size_t pos;
+  size_t pos = 0;
   size_t len = word.size();
 
   while ((pos = s.find(word, pos)) != std::string_view::npos) {
+    log(log_, LOG::INFO,
+        std::format("[B] Looking for {}, now position {}", std::string{word},
+                    pos));
     occs.push_back(pos);
     pos += len; // skip the word
   }
@@ -298,7 +311,7 @@ Heading find_heading(std::string_view s, size_t pos) {
   Heading h;
   size_t depth_pos = pos + 2; // to skip "<h"
   size_t start_pos = s.find(">", pos) + 1;
-  size_t end_pos = s.find("</h", pos);
+  size_t end_pos = s.find("</h", start_pos);
 
   char d = s[depth_pos];
   h.depth = d - '0';

@@ -75,9 +75,9 @@ inline std::string LOG_str(LOG severity) {
 }
 
 inline void log(std::vector<Log_Entry> &log, LOG severity,
-                const std::string &msg) {
+                std::string_view msg) {
   log.push_back({std::chrono::system_clock::now(),
-                 std::format("{}: {}", LOG_str(severity), msg)});
+                 std::format("{}: {}", LOG_str(severity), std::string{msg})});
 }
 
 struct Result_A {
@@ -116,8 +116,8 @@ void join_results_A(Result_A &r,
 Result_B process_B(int rank, const std::string &url);
 
 // find positions of all occurences of word inside s
-std::vector<size_t> find_occurences(std::string_view s,
-                                    const std::string &word);
+std::vector<size_t> find_occurences(std::vector<Log_Entry> &log,
+                                    std::string_view s, std::string_view word);
 
 // find the contents of href="..." inside a tag
 std::string find_href(std::string_view s, size_t pos);
