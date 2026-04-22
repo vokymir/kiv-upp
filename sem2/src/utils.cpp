@@ -147,6 +147,9 @@ void send_result_B(const Result_B &r, int dest) {
 
   // = FOUND PAGES
   send_vector<std::string>(r.found_pages, dest, tag, send_string);
+
+  // = LOG
+  send_vector<Log_Entry>(r.log, dest, tag, send_log_entry);
 }
 
 Result_B recv_result_B(int &src) {
@@ -164,6 +167,9 @@ Result_B recv_result_B(int &src) {
 
   // = FOUND PAGES
   r.found_pages = recv_vector<std::string>(src, tag, recv_string);
+
+  // = LOG
+  r.log = recv_vector<Log_Entry>(src, tag, recv_log_entry);
 
   return r;
 }

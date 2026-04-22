@@ -63,6 +63,60 @@ void B(int rank) {
 
 namespace _detail {
 
+void render_html(const Result_A &r, std::string &output) {
+  output += "<li>";
+  output += "<h3>Root URL: " + r.contents[0].url + "</h3>";
+
+  // pages
+  output += "<h4>Pages</h4><ul>";
+
+  for (const auto &page : r.contents) {
+    output += "<li>";
+    output += "<b>" + page.url + "</b><br>";
+
+    output += "Images: " + std::to_string(page.imgs) + "<br>";
+    output += "Links: " + std::to_string(page.links) + "<br>";
+    output += "Forms: " + std::to_string(page.forms) + "<br>";
+
+    // headings
+    output += "<u>Headings:</u><br>";
+    for (const auto &h : page.headings) {
+      output += std::to_string(h.depth * 2) + "&nbsp;"; // indent
+      output += "- " + h.text + "<br>";
+    }
+
+    output += "</li>";
+  }
+
+  output += "</ul>";
+
+  // Graph
+  output += "<h4>Graph</h4>";
+
+  // nodes
+  output += "<b>Nodes:</b><ul>";
+  for (const auto &uri : r.graph.uris) {
+    output += "<li>" + uri + "</li>";
+  }
+  output += "</ul>";
+
+  // edges
+  output += "<b>Edges:</b><ul>";
+  for (const auto &ref : r.graph.refs) {
+    output += "<li>" + ref.origin + " → " + ref.target + "</li>";
+  }
+  output += "</ul>";
+
+  // log
+  output += "<h4>Log</h4><ul>";
+  for (const auto &l : r.log) {
+    output += "<li>" + l.msg + "</li>";
+  }
+  output += "</ul>";
+
+  output += "</li>";
+}
+
 void process_master(const std::vector<std::string> &urls, std::string &output) {
 
   // divide the work
@@ -72,12 +126,12 @@ void process_master(const std::vector<std::string> &urls, std::string &output) {
   }
 
   // conquer the results
-  output = "Zadali jste: <ul>";
+  output += "<ul>";
 
   for (int i = 0; i < urls.size(); i++) {
     int worker = cfg::assign_A(i);
     Result_A res = utils::mpi::recv_result_A(worker);
-    output += res.contents[0].url + "<br/>";
+    render_html(res, output);
   }
 
   output += "</ul>";
@@ -89,7 +143,7 @@ Result_A process_A(int rank, const std::string &original_url) {
   std::queue<std::string> queue;
 
   queue.push(original_url);
-  log(r.log, ""); // start
+  log(r.log, LOG::INFO, std::format("[A] Start processing {}", original_url));
 
   int sent = 0;
   int done = 0;
@@ -100,19 +154,27 @@ Result_A process_A(int rank, const std::string &original_url) {
     while (done < sent) {
       int worker = cfg::assign_B(rank, done++);
       Result_B res = utils::mpi::recv_result_B(worker);
+      log(r.log, LOG::INFO,
+          std::format(
+              "[A] Received work from {}, the status is now done/sent: {}/{}",
+              worker, done, sent));
 
       // if one page is processed multiple times, don't do duplicates
       // (it might happen if links to that page are found before it is
       // processed)
       if (processed.contains(res.page.url)) {
+        log(r.log, LOG::WARN,
+            std::format("[A] Throwing out duplicate page {}", res.page.url));
         continue;
       }
       processed[res.page.url] = res;
 
       // enqueue found pages
       for (const auto &found_url : res.found_pages) {
+        log(r.log, LOG::INFO, std::format("[A] Might enque {}", found_url));
         // only if it already isn't done
         if (!processed.contains(found_url)) {
+          log(r.log, LOG::INFO, std::format("[A] Enquing {}", found_url));
           queue.push(found_url);
         }
       }
@@ -125,12 +187,14 @@ Result_A process_A(int rank, const std::string &original_url) {
 
       int worker = cfg::assign_B(rank, sent++);
       utils::mpi::send_string(url, worker, TAG_URL);
+      log(r.log, LOG::INFO,
+          std::format("[A] Sent to worker {} page {}", worker, url));
     }
   }
 
   join_results_A(r, processed);
 
-  log(r.log, ""); // end
+  log(r.log, LOG::INFO, "[A] Ending page processing"); // end
 
   return r;
 }
@@ -151,6 +215,10 @@ void join_results_A(
     for (const auto &target : res.found_pages) {
       r.graph.refs.push_back({url, target});
     }
+
+    for (const auto &log : res.log) {
+      r.log.push_back(log);
+    }
   }
 }
 
@@ -158,6 +226,11 @@ Result_B process_B(int rank, const std::string &url) {
   Result_B r;
 
   std::string contents = utils::downloadHTML(url);
+
+  if (contents.empty()) {
+    log(r.log, LOG::ERROR,
+        std::format("[B] Cannot download HTML page {}", url));
+  }
 
   r.page.url = url;
   r.page.imgs = find_occurences(contents, "<img").size();
@@ -171,6 +244,7 @@ Result_B process_B(int rank, const std::string &url) {
     std::string link = find_href(contents, link_pos);
     // skip invalid links and that which leads to another domain
     if (link.empty() || !link.starts_with(url)) {
+      log(r.log, LOG::INFO, std::format("[B] Skipping link {}", link));
       continue;
     }
   }

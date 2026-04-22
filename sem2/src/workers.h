@@ -59,8 +59,25 @@ struct Log_Entry {
   std::string msg;
 };
 
-inline void log(std::vector<Log_Entry> &log, std::string msg) {
-  log.push_back({std::chrono::system_clock::now(), std::move(msg)});
+enum Log_Severity { INFO, WARN, ERROR };
+typedef Log_Severity LOG;
+inline std::string LOG_str(LOG severity) {
+  switch (severity) {
+  case LOG::INFO:
+    return "INFO";
+  case LOG::WARN:
+    return "WARN";
+  case LOG::ERROR:
+    return "ERROR";
+  }
+
+  return "UNKNOWN";
+}
+
+inline void log(std::vector<Log_Entry> &log, LOG severity,
+                const std::string &msg) {
+  log.push_back({std::chrono::system_clock::now(),
+                 std::format("{}: {}", LOG_str(severity), msg)});
 }
 
 struct Result_A {
@@ -73,9 +90,14 @@ struct Result_B {
   Page_Content page;
   // links to pages with the same prefix
   std::vector<std::string> found_pages;
+  std::vector<Log_Entry> log;
 };
 
 // === PROCESSES
+
+// == MASTER PROCESS
+
+void render_html(const Result_A &r, std::string &output);
 
 // process list of URLs using MPI and write informative html into output
 void process_master(const std::vector<std::string> &urls, std::string &output);
