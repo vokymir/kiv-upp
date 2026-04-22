@@ -29,6 +29,12 @@ namespace mpi {
 // some functions are one-liners (send_int), but they are useful thanks to the
 // same function syntax
 
+// NOTE: for simpler use - different contexts, so clash is not likely
+using namespace worker::_detail;
+
+// =====
+// === BASIC DATA TYPES
+
 // send any integer to some MPI worker
 void send_int(int num, int dest, int tag);
 
@@ -42,6 +48,9 @@ void send_string(const std::string &s, int dest, int tag);
 // receive a string
 // IF src is MPI_ANY_SOURCE, it will be filled with actual worker ID
 std::string recv_string(int &src, int tag);
+
+// =====
+// === CONTAINERS
 
 // send any vector
 // REQUIRES a function for given data type
@@ -72,12 +81,61 @@ std::vector<T> recv_vector(int &src, int tag, T_recv_fn fn) {
   return v;
 }
 
+// =====
+// === CUSTOM STRUCTS
+
+// == NEEDED FOR B
+
 // send Result_B to dest. tag is already set to correct tag
-void send_result_B(const worker::_detail::Result_B &r, int dest);
+void send_result_B(const Result_B &r, int dest);
 
 // receive Result_B, tag is already set to correct tag
 // IF src is MPI_ANY_SOURCE, it will be filled with actual worker ID
-worker::_detail::Result_B recv_result_B(int &src);
+Result_B recv_result_B(int &src);
+
+// == NEEDED FOR A
+
+// send heading to dest
+void send_heading(const Heading &h, int dest, int tag);
+
+// receive heading
+// IF src is MPI_ANY_SOURCE, it will be filled with actual worker ID
+Heading recv_heading(int &src, int tag);
+
+// send reference to dest
+void send_reference(const Reference &h, int dest, int tag);
+
+// receive reference
+// IF src is MPI_ANY_SOURCE, it will be filled with actual worker ID
+Reference recv_reference(int &src, int tag);
+
+// send page_content to dest
+void send_page_content(const Page_Content &h, int dest, int tag);
+
+// receive page_content
+// IF src is MPI_ANY_SOURCE, it will be filled with actual worker ID
+Page_Content recv_page_content(int &src, int tag);
+
+// send log_entry to dest
+void send_log_entry(const Log_Entry &h, int dest, int tag);
+
+// receive log_entry
+// IF src is MPI_ANY_SOURCE, it will be filled with actual worker ID
+Log_Entry recv_log_entry(int &src, int tag);
+
+// send website graph to dest
+void send_graph(const Website_Graph &h, int dest, int tag);
+
+// receive website graph
+// IF src is MPI_ANY_SOURCE, it will be filled with actual worker ID
+Website_Graph recv_graph(int &src, int tag);
+
+// send result_A to dest
+void send_result_A(const Result_A &h, int dest, int tag);
+
+// receive result_A
+// IF src is MPI_ANY_SOURCE, it will be filled with actual worker ID
+Result_A recv_result_A(int &src, int tag);
 
 } // namespace mpi
 

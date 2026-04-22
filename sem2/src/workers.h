@@ -64,7 +64,7 @@ inline void log(std::vector<Log_Entry> &log, std::string msg) {
 }
 
 struct Result_A {
- Website_Graph graph;
+  Website_Graph graph;
   std::vector<Page_Content> contents;
   std::vector<Log_Entry> log;
 };
