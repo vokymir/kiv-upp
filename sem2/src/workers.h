@@ -106,6 +106,9 @@ void process_master(const std::vector<std::string> &urls, std::string &output);
 // actually do the work in A
 Result_A process_A(int rank, const std::string &url);
 
+// remove whitespaces from both sides
+std::string trim(const std::string &s);
+
 // extract just the domain from URL
 // "http://test.cz/portal/info" -> "http://test.cz"
 // return EMPTY STRING on failure

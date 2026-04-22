@@ -145,9 +145,11 @@ Result_A process_A(int rank, const std::string &original_url) {
   std::unordered_set<std::string> in_progress;
   std::queue<std::string> queue;
 
-  queue.push(original_url);
+  std::string base_url = trim(original_url);
+  base_url = base_url.ends_with('/') ? base_url : base_url + "/";
+  queue.push(base_url);
   log(r.log, LOG::INFO,
-      std::format("[A {}] Start processing {}", rank, original_url));
+      std::format("[A {}] Start processing {}", rank, base_url));
 
   int sent = 0;
   int done = 0;
@@ -173,17 +175,19 @@ Result_A process_A(int rank, const std::string &original_url) {
 
         bool already_seen =
             (processed.contains(abs_url) || in_progress.contains(abs_url));
+        bool valid = valid_link(base_url, res.page.url, abs_url);
 
-        if (!already_seen &&
-            valid_link(original_url, res.page.url, found_url)) {
+        if (!already_seen && valid) {
           log(r.log, LOG::INFO,
-              std::format("[A {}] Enqueuing {}", rank, found_url));
+              std::format("[A {}] Enqueuing {}", rank, abs_url));
 
-          queue.push(found_url);
-          filtered.push_back(found_url);
+          queue.push(abs_url);
+          filtered.push_back(abs_url);
         } else {
           log(r.log, LOG::INFO,
-              std::format("[A {}] NOT enqueuing {}", rank, found_url));
+              std::format("[A {}] NOT enqueuing {}: {} {}", rank, abs_url,
+                          already_seen ? "already seen" : "",
+                          !valid ? "invalid" : ""));
         }
       }
 
@@ -209,6 +213,19 @@ Result_A process_A(int rank, const std::string &original_url) {
       std::format("[A {}] Ending page processing", rank)); // end
 
   return r;
+}
+
+std::string trim(const std::string &s) {
+  const std::string whitespace = " \t\n\r\f\v";
+
+  size_t start = s.find_first_not_of(whitespace);
+  if (start == std::string::npos) {
+    return "";
+  }
+
+  size_t end = s.find_last_not_of(whitespace);
+
+  return s.substr(start, end - start + 1);
 }
 
 std::string get_domain(const std::string &url) {
@@ -307,10 +324,14 @@ void join_results_A(
       r.graph.refs.push_back({url, target});
     }
 
+    // get all logs and sort them
     for (const auto &log : res.log) {
       r.log.push_back(log);
     }
   }
+  std::sort(
+      r.log.begin(), r.log.end(),
+      [](const Log_Entry &a, const Log_Entry &b) { return a.time < b.time; });
 }
 
 Result_B process_B(int rank, const std::string &url) {
