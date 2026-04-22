@@ -255,14 +255,16 @@ Website_Graph recv_graph(int &src, int tag) {
   return g;
 }
 
-void send_result_A(const Result_A &r, int dest, int tag) {
+void send_result_A(const Result_A &r, int dest) {
+  int tag = TAG_RESULT_A;
   send_graph(r.graph, dest, tag);
 
   send_vector(r.contents, dest, tag, send_page_content);
   send_vector(r.log, dest, tag, send_log_entry);
 }
 
-Result_A recv_result_A(int &src, int tag) {
+Result_A recv_result_A(int &src) {
+  int tag = TAG_RESULT_A;
   Result_A r;
 
   r.graph = recv_graph(src, tag);

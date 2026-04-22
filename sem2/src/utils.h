@@ -130,12 +130,12 @@ void send_graph(const Website_Graph &h, int dest, int tag);
 // IF src is MPI_ANY_SOURCE, it will be filled with actual worker ID
 Website_Graph recv_graph(int &src, int tag);
 
-// send result_A to dest
-void send_result_A(const Result_A &h, int dest, int tag);
+// send result_A to dest, tag is already set to correct tag
+void send_result_A(const Result_A &h, int dest);
 
-// receive result_A
+// receive result_A, tag is already set to correct tag
 // IF src is MPI_ANY_SOURCE, it will be filled with actual worker ID
-Result_A recv_result_A(int &src, int tag);
+Result_A recv_result_A(int &src);
 
 } // namespace mpi
 

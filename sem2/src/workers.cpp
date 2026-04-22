@@ -45,8 +45,7 @@ void A(int rank) {
 
     _detail::Result_A result = _detail::process_A(rank, url);
 
-    // TODO: send result of A to master
-    // utils::mpi::send_string(result, employer, _detail::TAG_RESULT_A);
+    utils::mpi::send_result_A(result, employer);
   }
 }
 
@@ -76,9 +75,9 @@ void process_master(const std::vector<std::string> &urls, std::string &output) {
   output = "Zadali jste: <ul>";
 
   for (int i = 0; i < urls.size(); i++) {
-    int src = MPI_ANY_SOURCE; // might be cfg::assign_A(i) - and that is precise
-    std::string res = utils::mpi::recv_string(src, TAG_RESULT_A);
-    output += res + "<br/>";
+    int worker = cfg::assign_A(i);
+    Result_A res = utils::mpi::recv_result_A(worker);
+    output += res.contents[0].url + "<br/>";
   }
 
   output += "</ul>";
