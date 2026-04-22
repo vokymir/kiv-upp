@@ -3,40 +3,25 @@
  * Soubory a hlavicku upravujte dle sveho uvazeni a nutnosti
  */
 
-#include <iostream>
-#include <string>
-#include <vector>
 #include <mpi.h>
 
-#include "server.h"
-#include "utils.h"
-
-void process(const std::vector<std::string> &URLs, std::string &vystup) {
-
-  // tuhle metodu implementujte
-  // v parametru URLs jsou URL adresy, ktere byly odeslany z formulare
-
-  // tohle nahradte vystupem, ktery chcete zobrazit uzivateli (tj. vysledkem
-  // zpracovani)
-  vystup = "Zadali jste: <ul>";
-  for (const auto &url : URLs) {
-    vystup += "<li>" + url + "</li>";
-  }
-  vystup += "</ul>";
-}
+#include "workers.h"
 
 int main(int argc, char **argv) {
 
-  // inicializace serveru
-  CServer svr;
-  if (!svr.Init("./data", "0.0.0.0", 8001)) {
-    std::cerr << "Nelze inicializovat server!" << std::endl;
-    return EXIT_FAILURE;
+  MPI_Init(&argc, &argv);
+
+  int rank, size;
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Comm_size(MPI_COMM_WORLD, &size);
+
+  int retval = EXIT_SUCCESS;
+  if (rank == 0) {
+    retval = crawl::worker::master();
+  } else {
+    crawl::worker::non_master(rank, argc, argv);
   }
 
-  // registrace callbacku pro zpracovani odeslanych URL
-  svr.RegisterFormCallback(process);
-
-  // spusteni serveru
-  return svr.Run() ? EXIT_SUCCESS : EXIT_FAILURE;
+  MPI_Finalize();
+  return retval;
 }
