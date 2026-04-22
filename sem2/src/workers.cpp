@@ -1,12 +1,13 @@
 
 #include "workers.h"
+#include "config.h"
 #include "server.h"
 #include "utils.h"
 #include <iostream>
 #include <mpi.h>
 namespace crawl::worker {
 
-int master(int N, int M) {
+int master() {
 
   // inicializace serveru
   CServer svr;
@@ -18,16 +19,14 @@ int master(int N, int M) {
   // registrace callbacku pro zpracovani odeslanych URL
   // these shananigans are only to avoid global state/config which would hold
   // M and N
-  svr.RegisterFormCallback(
-      [N, M](const std::vector<std::string> &urls, std::string &output) {
-        _detail::process(N, M, urls, output);
-      });
+  svr.RegisterFormCallback(_detail::process);
 
   // spusteni serveru
   return svr.Run() ? EXIT_SUCCESS : EXIT_FAILURE;
 }
 
-void non_master(int rank, int N, int M) {
+void non_master(int rank) {
+  int N = crawl::cfg::N;
 
   if (rank <= N) {
     A();
@@ -56,8 +55,9 @@ void B() {}
 
 namespace _detail {
 
-void process(int N, int M, const std::vector<std::string> &urls,
-             std::string &output) {
+void process(const std::vector<std::string> &urls, std::string &output) {
+  int N = crawl::cfg::N;
+  int M = crawl::cfg::M;
 
   // divide the work
   for (int i = 0; i < static_cast<int>(urls.size()); ++i) {
