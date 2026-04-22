@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
 
-cmake -S . -B build
-cmake --build build
+BUILD_DIR="build"
+
+cmake -S . -B "${BUILD_DIR}"
+cmake --build "${BUILD_DIR}"
