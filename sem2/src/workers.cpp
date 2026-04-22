@@ -5,7 +5,7 @@
 #include "utils.h"
 #include <iostream>
 #include <mpi.h>
-namespace crawl::worker {
+namespace worker {
 
 int master() {
 
@@ -26,9 +26,8 @@ int master() {
 }
 
 void non_master(int rank) {
-  int N = crawl::cfg::N;
 
-  if (rank <= N) {
+  if (cfg::is_worker_A(rank)) {
     A();
 
   } else {
@@ -56,29 +55,25 @@ void B() {}
 namespace _detail {
 
 void process(const std::vector<std::string> &urls, std::string &output) {
-  int N = crawl::cfg::N;
-  int M = crawl::cfg::M;
 
   // divide the work
   for (int i = 0; i < static_cast<int>(urls.size()); ++i) {
-    int worker = 1 + (i % N);
+    int worker = cfg::assign_A(i);
     utils::mpi::send_string(urls[i], worker, TAG_URL);
   }
 
   // conquer the results
   output = "Zadali jste: <ul>";
+
   for (int i = 0; i < urls.size(); i++) {
     int src = MPI_ANY_SOURCE;
     std::string res = utils::mpi::recv_string(src, TAG_RESULT);
-    output += res;
+    output += res + "<br/>";
   }
-  //   for (int i = N + 1; i <= N + M; ++i) {
-  //     std::string res = utils::mpi::recv_string(i, TAG_RESULT);
-  //     output += "<li>" + res + "</li>";
-  //   }
+
   output += "</ul>";
 }
 
 } // namespace _detail
 
-} // namespace crawl::worker
+} // namespace worker

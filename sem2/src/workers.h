@@ -2,7 +2,7 @@
 
 #include <string>
 #include <vector>
-namespace crawl::worker {
+namespace worker {
 
 // return value = program return value
 // run the server
@@ -28,4 +28,4 @@ void process(const std::vector<std::string> &urls, std::string &output);
 
 } // namespace _detail
 
-} // namespace crawl::worker
+} // namespace worker

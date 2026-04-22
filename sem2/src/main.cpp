@@ -10,6 +10,7 @@
 #include "workers.h"
 
 int main(int argc, char **argv) {
+  int retval = EXIT_SUCCESS;
 
   MPI_Init(&argc, &argv);
 
@@ -17,15 +18,14 @@ int main(int argc, char **argv) {
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &size);
 
-  int retval = EXIT_SUCCESS;
   auto [N, M] = utils::parse_args(argc, argv);
-  crawl::cfg::N = N;
-  crawl::cfg::M = M;
+  cfg::N = N;
+  cfg::M = M;
 
-  if (rank == 0) {
-    retval = crawl::worker::master();
+  if (cfg::is_master(rank)) {
+    retval = worker::master();
   } else {
-    crawl::worker::non_master(rank);
+    worker::non_master(rank);
   }
 
   MPI_Finalize();
