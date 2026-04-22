@@ -20,7 +20,7 @@ int main(int argc, char **argv) {
   auto [N, M] = utils::parse_args(argc, argv);
 
   if (rank == 0) {
-    retval = crawl::worker::master();
+    retval = crawl::worker::master(N);
   } else {
     crawl::worker::non_master(rank, N, M);
   }
