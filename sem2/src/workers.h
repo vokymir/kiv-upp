@@ -82,6 +82,7 @@ inline void log(std::vector<Log_Entry> &log, LOG severity, std::string msg) {
 }
 
 struct Result_A {
+  std::string base_url;
   Website_Graph graph;
   std::vector<Page_Content> contents;
   std::vector<Log_Entry> log;

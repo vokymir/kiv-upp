@@ -81,8 +81,13 @@ std::string downloadHTML(const std::string &url) {
   cli.set_follow_location(true);
   auto res = cli.Get(path.c_str());
 
-  if (!res || res->status != 200) {
-    std::cerr << "Chyba: " << res->status << std::endl;
+  if (!res) {
+    std::cerr << "Chyba: request failed (no response)" << std::endl;
+    return "";
+  }
+
+  if (res->status != 200) {
+    std::cerr << "Chyba: HTTP status " << res->status << std::endl;
     return "";
   }
 
@@ -269,6 +274,8 @@ Website_Graph recv_graph(int &src, int tag) {
 
 void send_result_A(const Result_A &r, int dest) {
   int tag = TAG_RESULT_A;
+
+  send_string(r.base_url, dest, tag);
   send_graph(r.graph, dest, tag);
 
   send_vector(r.contents, dest, tag, send_page_content);
@@ -279,6 +286,7 @@ Result_A recv_result_A(int &src) {
   int tag = TAG_RESULT_A;
   Result_A r;
 
+  r.base_url = recv_string(src, tag);
   r.graph = recv_graph(src, tag);
 
   r.contents = recv_vector<Page_Content>(src, tag, recv_page_content);

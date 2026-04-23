@@ -93,7 +93,7 @@ void process_master(const std::vector<std::string> &urls, std::string &output) {
 
 void render_html(const Result_A &r, std::string &output) {
   output += "<li>";
-  output += "<h3>Root URL: " + r.contents[0].url + "</h3>";
+  output += "<h3>Root URL: " + r.base_url + "</h3>";
 
   // pages
   output += "<h4>Pages</h4><ul>";
@@ -189,7 +189,7 @@ void save_to_file(const std::vector<Result_A> &websites) {
 
     std::string base = "unknown";
     if (!site.contents.empty()) {
-      base = sanitize(site.contents.front().url);
+      base = sanitize(site.base_url);
     }
 
     std::string dir = "results/" + timestamp + "_" + base;
@@ -262,6 +262,7 @@ Result_A process_A(int rank, const std::string &original_url) {
 
   std::string base_url = trim(original_url);
   base_url = base_url.ends_with('/') ? base_url : base_url + "/";
+  r.base_url = base_url;
   queue.push(base_url);
   log(r.log, LOG::INFO,
       std::format("[A {}] Start processing {}", rank, base_url));
@@ -542,13 +543,12 @@ Result_B process_B(int rank, const std::string &url) {
       std::format("[B {}] Starts working now, url = {}", rank, url));
 
   const std::string contents = utils::downloadHTML(url);
-  const std::string_view contents_sv{contents.data(), contents.size()};
-
   if (contents.empty()) {
     log(r.log, LOG::ERROR,
         std::format("[B {}] Cannot download HTML page {}", rank, url));
     return r;
   }
+  const std::string_view contents_sv{contents.data(), contents.size()};
 
   r.page.url = url;
   r.page.imgs = find_occurences(contents_sv, "<img").size();
