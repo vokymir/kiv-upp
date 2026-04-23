@@ -1,0 +1,11 @@
+- nevedel jsem, jestli mame resit vypinani aplikace? ja jsem proste vypinal
+  pomoci ^C, ale kdyby na to prislo, mohl bych posilat STOP zpravicku od mastera
+  vsem workerum a udelat to vice korektne
+- je to trochu malo dekomponovany, temer vsechno je v namespace _detail, coz
+  nebyl zamer - proste to tak prislo a prekvapive to neni zas tak dlouhy file
+  - napr. funkce process_A je _kapanek_ vetsi nez bych chtel, ale presne
+    popisuje jak jsem nad tim premyslel - zacal jsem s velkym while, pridal jsem
+    ty vnitrni akorat ty hodne nabobtnaly
+- mam tam kupu funkci zamerenych na string nebo url; jejich funkcionalitu by slo
+  psat lepe, aby se daly pouzit na vice mistech a bylo jich tim padem min -
+  takhle jich je vzdy treba dve, co delaji temer stejnou vec
