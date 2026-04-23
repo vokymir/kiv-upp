@@ -98,10 +98,22 @@ struct Result_B {
 
 // == MASTER PROCESS
 
-void render_html(const Result_A &r, std::string &output);
+void process_master(const std::vector<std::string> &urls, std::string &output);
 
 // process list of URLs using MPI and write informative html into output
-void process_master(const std::vector<std::string> &urls, std::string &output);
+void render_html(const Result_A &r, std::string &output);
+
+// create a timesptamp string
+std::string make_timestamp();
+
+// sanitize url to be safe as filepath
+std::string sanitize(const std::string &url);
+
+std::string
+format_time(const std::chrono::time_point<std::chrono::system_clock> &tp);
+
+// final stage of master process
+void save_to_file(const std::vector<Result_A> &websites);
 
 // == PROCESS A
 

@@ -3,6 +3,8 @@
 #include "config.h"
 #include "server.h"
 #include "utils.h"
+#include <filesystem>
+#include <fstream>
 #include <iostream>
 #include <mpi.h>
 #include <queue>
@@ -65,9 +67,33 @@ void B(int rank) {
 
 namespace _detail {
 
+void process_master(const std::vector<std::string> &urls, std::string &output) {
+
+  // divide the work
+  for (int i = 0; i < static_cast<int>(urls.size()); ++i) {
+    int worker = cfg::assign_A(i);
+    utils::mpi::send_string(urls[i], worker, TAG_URL);
+  }
+
+  // conquer the results
+  std::vector<Result_A> results;
+  output += "<ul>";
+
+  for (int i = 0; i < urls.size(); i++) {
+    int worker = cfg::assign_A(i);
+    Result_A res = utils::mpi::recv_result_A(worker);
+    render_html(res, output);
+    results.push_back(res);
+  }
+
+  output += "</ul>";
+
+  save_to_file(results);
+}
+
 void render_html(const Result_A &r, std::string &output) {
   output += "<li>";
-  output += "<h3>Root URL: " + r.contents[r.contents.size() - 1].url + "</h3>";
+  output += "<h3>Root URL: " + r.contents[0].url + "</h3>";
 
   // pages
   output += "<h4>Pages</h4><ul>";
@@ -105,7 +131,7 @@ void render_html(const Result_A &r, std::string &output) {
   // edges
   output += "<b>Edges:</b><ul>";
   for (const auto &ref : r.graph.refs) {
-    output += "<li>" + ref.origin + " → " + ref.target + "</li>";
+    output += "<li>" + ref.origin + " -- " + ref.target + "</li>";
   }
   output += "</ul>";
 
@@ -119,24 +145,116 @@ void render_html(const Result_A &r, std::string &output) {
   output += "</li>";
 }
 
-void process_master(const std::vector<std::string> &urls, std::string &output) {
+std::string make_timestamp() {
+  auto now = std::chrono::system_clock::now();
+  std::time_t t = std::chrono::system_clock::to_time_t(now);
 
-  // divide the work
-  for (int i = 0; i < static_cast<int>(urls.size()); ++i) {
-    int worker = cfg::assign_A(i);
-    utils::mpi::send_string(urls[i], worker, TAG_URL);
+  std::tm tm = *std::localtime(&t);
+
+  std::ostringstream oss;
+  oss << std::put_time(&tm, "%Y_%m_%d_%H_%M");
+  return oss.str();
+}
+
+std::string sanitize(const std::string &url) {
+  std::string out;
+  for (char c : url) {
+    if (std::isalnum(c)) {
+      out += c;
+    } else {
+      out += '_';
+    }
   }
+  return out;
+}
 
-  // conquer the results
-  output += "<ul>";
+std::string
+format_time(const std::chrono::time_point<std::chrono::system_clock> &tp) {
+  std::time_t t = std::chrono::system_clock::to_time_t(tp);
+  std::tm tm = *std::localtime(&t);
 
-  for (int i = 0; i < urls.size(); i++) {
-    int worker = cfg::assign_A(i);
-    Result_A res = utils::mpi::recv_result_A(worker);
-    render_html(res, output);
+  std::ostringstream oss;
+  oss << std::put_time(&tm, "%Y-%m-%d %H:%M:%S");
+  return oss.str();
+}
+
+void save_to_file(const std::vector<Result_A> &websites) {
+  namespace fs = std::filesystem;
+
+  fs::create_directories("results");
+
+  for (const auto &site : websites) {
+    // == create dir
+    std::string timestamp = make_timestamp();
+
+    std::string base = "unknown";
+    if (!site.contents.empty()) {
+      base = sanitize(site.contents.front().url);
+    }
+
+    std::string dir = "results/" + timestamp + "_" + base;
+    fs::create_directories(dir);
+
+    // == map.txt
+    {
+      std::ofstream f(dir + "/map.txt");
+
+      // nodes
+      for (const auto &uri : site.graph.uris) {
+        f << "\"" << uri << "\"\n";
+      }
+
+      // edges
+      for (const auto &ref : site.graph.refs) {
+        f << "\"" << ref.origin << "\" \"" << ref.target << "\"\n";
+      }
+    }
+
+    // == content.txt
+    {
+      std::ofstream f(dir + "/content.txt");
+
+      for (const auto &page : site.contents) {
+        f << "\"" << page.url << "\"\n";
+        f << "IMAGES " << page.imgs << "\n";
+        f << "LINKS " << page.links << "\n";
+        f << "FORMS " << page.forms << "\n";
+
+        for (const auto &h : page.headings) {
+          for (int i = 0; i < h.depth; ++i)
+            f << "-";
+          f << " " << h.text << "\n";
+        }
+
+        f << "\n";
+      }
+    }
+
+    // == log.txt
+    {
+      std::ofstream f(dir + "/log.txt");
+
+      if (site.log.empty()) {
+        f << "OK\n";
+      } else {
+        // first + last timestamp
+        f << format_time(site.log.front().time) << "\n";
+        f << format_time(site.log.back().time) << "\n";
+
+        bool has_error = false;
+        for (const auto &entry : site.log) {
+          if (entry.msg.find("ERROR") != std::string::npos) {
+            f << entry.msg << "\n";
+            has_error = true;
+          }
+        }
+
+        if (!has_error) {
+          f << "OK\n";
+        }
+      }
+    }
   }
-
-  output += "</ul>";
 }
 
 Result_A process_A(int rank, const std::string &original_url) {
@@ -391,11 +509,31 @@ void join_results_A(
       r.graph.refs.push_back({url, target});
     }
 
-    // get all logs and sort them
+    // get all logs
     for (const auto &log : res.log) {
       r.log.push_back(log);
     }
   }
+
+  // SORT everything
+
+  // sort contents by URL
+  std::sort(r.contents.begin(), r.contents.end(),
+            [](const Page_Content &a, const Page_Content &b) {
+              return a.url < b.url;
+            });
+
+  // sort graph as strings
+  std::sort(r.graph.uris.begin(), r.graph.uris.end());
+  std::sort(r.graph.refs.begin(), r.graph.refs.end(),
+            [](const Reference &a, const Reference &b) {
+              if (a.origin != b.origin) {
+                return a.origin < b.origin;
+              }
+              return a.target < b.target;
+            });
+
+  // sort logs by time
   std::sort(
       r.log.begin(), r.log.end(),
       [](const Log_Entry &a, const Log_Entry &b) { return a.time < b.time; });
