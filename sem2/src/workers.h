@@ -185,6 +185,7 @@ std::string escape_html(std::string_view str);
 
 // find the contents of href="..." inside a <a> tag
 // pos is the position of "<a"
+// return empty string on failure
 std::string find_href(std::string_view s, size_t pos);
 
 // classify the heading, pos it the position of "<h"

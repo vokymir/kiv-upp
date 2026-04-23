@@ -35,8 +35,11 @@ void non_master(int rank) {
   if (cfg::is_worker_A(rank)) {
     A(rank);
 
-  } else {
+  } else if (cfg::is_worker_B(rank)) {
     B(rank);
+  } else {
+    throw std::runtime_error(
+        std::format("RANK {} is not valid worker rank.", rank));
   }
 }
 
@@ -67,11 +70,13 @@ void B(int rank) {
 
 namespace _detail {
 
+// == MASTER PROCESS
+
 void process_master(const std::vector<std::string> &urls, std::string &output) {
 
   // divide the work
   for (int i = 0; i < static_cast<int>(urls.size()); ++i) {
-    int worker = cfg::assign_A(i);
+    int worker = cfg::assign_A(i); // deterministic assigning
     utils::mpi::send_string(urls[i], worker, TAG::URL);
   }
 
@@ -80,9 +85,12 @@ void process_master(const std::vector<std::string> &urls, std::string &output) {
   output += "<ul>";
 
   for (int i = 0; i < urls.size(); i++) {
+    // we can reuse the deterministic assigning to collect results in the same
+    // order as they were given
     int worker = cfg::assign_A(i);
     Result_A res = utils::mpi::recv_result_A(worker);
-    render_html(res, output);
+
+    render_html(res, output); // save one for() which would only render
     results.push_back(res);
   }
 
@@ -118,7 +126,7 @@ void render_html(const Result_A &r, std::string &output) {
 
   output += "</ul>";
 
-  // Graph
+  // graph
   output += "<h4>Graph</h4>";
 
   // nodes
@@ -254,22 +262,39 @@ void save_to_file(const std::vector<Result_A> &websites) {
   }
 }
 
+// == PROCESS A
+
 Result_A process_A(int rank, const std::string &original_url) {
   Result_A r;
-  std::unordered_map<std::string, Result_B> processed;
-  std::unordered_set<std::string> in_progress;
   std::queue<std::string> queue;
+  // what at one point in time was in queue
+  std::unordered_set<std::string> seen;
+  // storing results
+  std::unordered_map<std::string, Result_B> processed;
 
+  // start with the base url (needs little sanitizing before action)
   std::string base_url = trim(original_url);
   base_url = base_url.ends_with('/') ? base_url : base_url + "/";
   r.base_url = base_url;
+  // == important to do both
   queue.push(base_url);
+  seen.insert(base_url);
+  // ==
   log(r.log, LOG::INFO,
       std::format("[A {}] Start processing {}", rank, base_url));
 
+  // remember how many tasks were sent and received to/from workers B
   int sent = 0;
   int done = 0;
-  // don't end on first run, wait until queue is empty and no B is working
+  // HOW OUTER WORKS:
+  // don't end on first run, work until queue is empty and no B is working
+  // HOW INNER WORKS:
+  // there are only two statements:
+  // 1. while there is work to be received from B, wait on it, process it (and
+  //    therefore potentially fill the queue with new work)
+  // 2. while there is work to be sent to B, do it
+  // NOTE: the order is important
+  // NOTE: the sent/done are only incrementing when sending/receiving work
   while (sent == 0 || sent != done) {
 
     // receive all enqueued work and fill the queue with new
@@ -281,8 +306,7 @@ Result_A process_A(int rank, const std::string &original_url) {
                       "done/sent: {}/{}",
                       rank, worker, done, sent));
 
-      // remove from in_progress, add to processed and get reference to it
-      in_progress.erase(res.page.url);
+      // add to processed and get reference to it
       auto [it, inserted] = processed.emplace(res.page.url, std::move(res));
       if (!inserted) {
         log(r.log, LOG::ERROR,
@@ -290,50 +314,53 @@ Result_A process_A(int rank, const std::string &original_url) {
                         res.page.url));
         continue;
       }
+      // we need reference because now we filter its found pages, only storing
+      // if they are valid
       auto &stored = it->second;
 
       // filter found pages and enque them for further search
-      std::vector<std::string> filtered;
+      std::vector<std::string> filtered; // swap
+
       for (const auto &found_url : stored.found_pages) {
+        // CRITICAL: must be absolute url to work reliably
         std::string abs_url = resolve_link(stored.page.url, found_url);
 
         bool already_seen =
-            (processed.contains(abs_url) || in_progress.contains(abs_url));
+            std::find(seen.begin(), seen.end(), abs_url) != seen.end();
         bool valid = valid_link(base_url, stored.page.url, abs_url);
 
-        if (!already_seen && valid) {
-          log(r.log, LOG::INFO,
-              std::format("[A {}] Enqueuing {}", rank, abs_url));
-
-          queue.push(abs_url);
+        if (valid) {
           filtered.push_back(abs_url);
 
-        } else {
-          log(r.log, LOG::INFO,
-              std::format("[A {}] NOT enqueuing {}: {} {}", rank, abs_url,
-                          already_seen ? "already seen" : "",
-                          !valid ? "invalid" : ""));
+          if (!already_seen) {
+            // == must be together
+            queue.push(abs_url);
+            seen.insert(abs_url);
+            // ==
+            log(r.log, LOG::INFO,
+                std::format("[A {}] Enqueuing {}", rank, abs_url));
+
+          } else {
+            log(r.log, LOG::INFO,
+                std::format("[A {}] NOT enqueuing {}: {} {}", rank, abs_url,
+                            already_seen ? "already seen" : "",
+                            !valid ? "invalid" : ""));
+          }
         }
       }
 
+      // CRITICAL: must swap
       stored.found_pages = std::move(filtered);
-    }
+
+    } // now sent == done, if queue is empty, we will stop
 
     // flush the queue to workers
     while (!queue.empty()) {
       std::string url = queue.front();
       queue.pop();
 
-      // must be here, because we don't watch what is in queue
-      bool already_seen =
-          (processed.contains(url) || in_progress.contains(url));
-      if (already_seen) {
-        continue;
-      }
-
       int worker = cfg::assign_B(rank, sent++);
       utils::mpi::send_string(url, worker, TAG::URL);
-      in_progress.insert(url);
       log(r.log, LOG::INFO,
           std::format("[A {}] Sent to worker {} page {}", rank, worker, url));
     }
@@ -352,7 +379,7 @@ std::string trim(const std::string &s) {
 
   size_t start = s.find_first_not_of(whitespace);
   if (start == std::string::npos) {
-    return "";
+    return ""; // it already was empty string
   }
 
   size_t end = s.find_last_not_of(whitespace);
@@ -550,6 +577,8 @@ Result_B process_B(int rank, const std::string &url) {
   }
   const std::string_view contents_sv{contents.data(), contents.size()};
 
+  // = trivial findings
+
   r.page.url = url;
   r.page.imgs = find_occurences(contents_sv, "<img").size();
   r.page.forms = find_occurences(contents_sv, "<form").size();
@@ -557,8 +586,10 @@ Result_B process_B(int rank, const std::string &url) {
   auto links = find_occurences(contents_sv, "<a");
   r.page.links = links.size();
 
+  // = nontrivial findings
+
   // fill all nonempty found links
-  // filtering is done on A
+  // (filtering is done on A)
   for (const auto &link_pos : links) {
     std::string link = find_href(contents_sv, link_pos);
 
@@ -588,6 +619,7 @@ std::vector<size_t> find_occurences(std::string_view s, std::string_view word) {
   size_t pos = 0;
   size_t len = word.size();
 
+  // find the position, but only push it if it already isn't end of string
   while ((pos = s.find(word, pos)) != std::string_view::npos) {
     occs.push_back(pos);
     pos += len; // skip the word
@@ -628,6 +660,7 @@ std::string find_href(std::string_view s, size_t pos) {
   size_t end_pos = s.find(">", pos);
   size_t href_pos = s.find("href=", pos);
 
+  // not found or href is after the >
   if (end_pos == std::string_view::npos || href_pos == std::string_view::npos ||
       href_pos > end_pos) {
     return {};
