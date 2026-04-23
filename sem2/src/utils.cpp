@@ -137,13 +137,8 @@ std::string recv_string(int &src, int tag) {
 void send_result_B(const Result_B &r, int dest) {
   int tag = TAG_RESULT_B;
 
-  // = URL
-  send_string(r.page.url, dest, tag);
-
-  // = INTEGERS
-  send_int(r.page.imgs, dest, tag);
-  send_int(r.page.links, dest, tag);
-  send_int(r.page.forms, dest, tag);
+  // = PAGE
+  send_page_content(r.page, dest, tag);
 
   // = FOUND PAGES
   send_vector<std::string>(r.found_pages, dest, tag, send_string);
@@ -157,13 +152,8 @@ Result_B recv_result_B(int &src) {
 
   Result_B r;
 
-  // = URL
-  r.page.url = recv_string(src, tag);
-
-  // = INTEGERS
-  r.page.imgs = recv_int(src, tag);
-  r.page.links = recv_int(src, tag);
-  r.page.forms = recv_int(src, tag);
+  // = PAGE
+  r.page = recv_page_content(src, tag);
 
   // = FOUND PAGES
   r.found_pages = recv_vector<std::string>(src, tag, recv_string);

@@ -109,8 +109,8 @@ void render_html(const Result_A &r, std::string &output) {
     // headings
     output += "<u>Headings:</u><br>";
     for (const auto &h : page.headings) {
-      output += std::to_string(h.depth * 2) + "&nbsp;"; // indent
-      output += "- " + h.text + "<br>";
+      output += std::to_string(h.depth);
+      output += ": " + h.text + "<br>";
     }
 
     output += "</li>";
@@ -235,16 +235,13 @@ void save_to_file(const std::vector<Result_A> &websites) {
       std::ofstream f(dir + "/log.txt");
 
       if (site.log.empty()) {
-        f << "OK\n";
-      } else {
-        // first + last timestamp
-        f << format_time(site.log.front().time) << "\n";
-        f << format_time(site.log.back().time) << "\n";
+        f << "EMPTY LOG\n";
 
+      } else {
         bool has_error = false;
         for (const auto &entry : site.log) {
+          f << format_time(entry.time) << " " << entry.msg << "\n";
           if (entry.msg.find("ERROR") != std::string::npos) {
-            f << entry.msg << "\n";
             has_error = true;
           }
         }
@@ -572,9 +569,16 @@ Result_B process_B(int rank, const std::string &url) {
 
   // fill all found headings
   auto headings = find_occurences(contents_sv, "<h");
+  log(r.log, LOG::INFO,
+      std::format("[B {}] Found {} headings", rank, headings.size()));
   for (const auto &heading_pos : headings) {
     auto heading = find_heading(contents_sv, heading_pos);
-    // TODO: validation
+    if (heading.text.empty()) {
+      continue; // skip invalid headings
+    }
+    log(r.log, LOG::INFO,
+        std::format("[B {}] Found heading: h{}: {}", rank, heading.depth,
+                    heading.text));
     r.page.headings.push_back(heading);
   }
 
@@ -643,16 +647,37 @@ std::string find_href(std::string_view s, size_t pos) {
   return std::string(s.substr(link_start_pos, link_end_pos - link_start_pos));
 }
 
-// TODO: validation after finds
 Heading find_heading(std::string_view s, size_t pos) {
-  Heading h;
-  size_t depth_pos = pos + 2; // to skip "<h"
-  size_t start_pos = s.find(">", pos) + 1;
-  size_t end_pos = s.find("</h", start_pos);
+  Heading h{};
+  size_t depth_pos = pos + 2;
+
+  // must have "<hX"
+  if (depth_pos >= s.size()) {
+    return h;
+  }
 
   char d = s[depth_pos];
+  if ('1' > d || d > '6') {
+    return h; // invalid, may be eg <html, <header, ...
+  }
+
   h.depth = d - '0';
 
+  // find end of opening tag
+  size_t tag_end = s.find('>', depth_pos);
+  if (tag_end == std::string_view::npos) {
+    return h;
+  }
+
+  size_t start_pos = tag_end + 1;
+
+  // find specific closing tag
+  size_t end_pos = s.find(std::format("</h{}", d), start_pos);
+  if (end_pos == std::string_view::npos) {
+    return h;
+  }
+
+  // extract text
   h.text = std::string(s.substr(start_pos, end_pos - start_pos));
 
   return h;
