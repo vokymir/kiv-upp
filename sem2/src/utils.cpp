@@ -156,7 +156,7 @@ std::string recv_string(int &src, int tag) {
 // == RESUTLS
 
 void send_result_B(const Result_B &r, int dest) {
-  int tag = TAG_RESULT_B;
+  int tag = TAG::RESULT_B;
 
   // = PAGE
   send_page_content(r.page, dest, tag);
@@ -169,7 +169,7 @@ void send_result_B(const Result_B &r, int dest) {
 }
 
 Result_B recv_result_B(int &src) {
-  int tag = TAG_RESULT_B;
+  int tag = TAG::RESULT_B;
 
   Result_B r;
 
@@ -186,7 +186,7 @@ Result_B recv_result_B(int &src) {
 }
 
 void send_result_A(const Result_A &r, int dest) {
-  int tag = TAG_RESULT_A;
+  int tag = TAG::RESULT_A;
 
   send_string(r.base_url, dest, tag);
   send_graph(r.graph, dest, tag);
@@ -196,7 +196,7 @@ void send_result_A(const Result_A &r, int dest) {
 }
 
 Result_A recv_result_A(int &src) {
-  int tag = TAG_RESULT_A;
+  int tag = TAG::RESULT_A;
   Result_A r;
 
   r.base_url = recv_string(src, tag);
@@ -282,14 +282,14 @@ Log_Entry recv_log_entry(int &src, int tag) {
 }
 
 void send_graph(const Website_Graph &g, int dest, int tag) {
-  send_vector(g.uris, dest, tag, send_string);
+  send_vector(g.urls, dest, tag, send_string);
   send_vector(g.refs, dest, tag, send_reference);
 }
 
 Website_Graph recv_graph(int &src, int tag) {
   Website_Graph g;
 
-  g.uris = recv_vector<std::string>(src, tag, recv_string);
+  g.urls = recv_vector<std::string>(src, tag, recv_string);
   g.refs = recv_vector<Reference>(src, tag, recv_reference);
 
   return g;

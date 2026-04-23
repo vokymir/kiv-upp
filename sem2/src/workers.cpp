@@ -45,7 +45,7 @@ void A(int rank) {
 
   while (true) {
 
-    std::string url = utils::mpi::recv_string(employer, _detail::TAG_URL);
+    std::string url = utils::mpi::recv_string(employer, _detail::TAG::URL);
 
     _detail::Result_A result = _detail::process_A(rank, url);
 
@@ -57,7 +57,7 @@ void B(int rank) {
   int employer = cfg::employer(rank);
 
   while (true) {
-    std::string url = utils::mpi::recv_string(employer, _detail::TAG_URL);
+    std::string url = utils::mpi::recv_string(employer, _detail::TAG::URL);
 
     _detail::Result_B result = _detail::process_B(rank, url);
 
@@ -72,7 +72,7 @@ void process_master(const std::vector<std::string> &urls, std::string &output) {
   // divide the work
   for (int i = 0; i < static_cast<int>(urls.size()); ++i) {
     int worker = cfg::assign_A(i);
-    utils::mpi::send_string(urls[i], worker, TAG_URL);
+    utils::mpi::send_string(urls[i], worker, TAG::URL);
   }
 
   // conquer the results
@@ -123,7 +123,7 @@ void render_html(const Result_A &r, std::string &output) {
 
   // nodes
   output += "<b>Nodes:</b><ul>";
-  for (const auto &uri : r.graph.uris) {
+  for (const auto &uri : r.graph.urls) {
     output += "<li>" + uri + "</li>";
   }
   output += "</ul>";
@@ -200,7 +200,7 @@ void save_to_file(const std::vector<Result_A> &websites) {
       std::ofstream f(dir + "/map.txt");
 
       // nodes
-      for (const auto &uri : site.graph.uris) {
+      for (const auto &uri : site.graph.urls) {
         f << "\"" << uri << "\"\n";
       }
 
@@ -332,7 +332,7 @@ Result_A process_A(int rank, const std::string &original_url) {
       }
 
       int worker = cfg::assign_B(rank, sent++);
-      utils::mpi::send_string(url, worker, TAG_URL);
+      utils::mpi::send_string(url, worker, TAG::URL);
       in_progress.insert(url);
       log(r.log, LOG::INFO,
           std::format("[A {}] Sent to worker {} page {}", rank, worker, url));
@@ -493,7 +493,7 @@ bool valid_link(const std::string &base_url, const std::string &current_url,
 void join_results_A(
     Result_A &r, const std::unordered_map<std::string, Result_B> &processed) {
   r.contents.reserve(processed.size());
-  r.graph.uris.reserve(processed.size());
+  r.graph.urls.reserve(processed.size());
 
   for (const auto &[url, res] : processed) {
 
@@ -501,7 +501,7 @@ void join_results_A(
     r.contents.push_back(res.page);
 
     // Website_Graph almost done by B
-    r.graph.uris.push_back(url);
+    r.graph.urls.push_back(url);
 
     for (const auto &target : res.found_pages) {
       r.graph.refs.push_back({url, target});
@@ -522,7 +522,7 @@ void join_results_A(
             });
 
   // sort graph as strings
-  std::sort(r.graph.uris.begin(), r.graph.uris.end());
+  std::sort(r.graph.urls.begin(), r.graph.urls.end());
   std::sort(r.graph.refs.begin(), r.graph.refs.end(),
             [](const Reference &a, const Reference &b) {
               if (a.origin != b.origin) {
