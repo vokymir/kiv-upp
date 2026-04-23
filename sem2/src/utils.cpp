@@ -153,7 +153,7 @@ std::string recv_string(int &src, int tag) {
 // =====
 // === CUSTOM STRUCTS
 
-// == NEEDED FOR B
+// == RESUTLS
 
 void send_result_B(const Result_B &r, int dest) {
   int tag = TAG_RESULT_B;
@@ -162,10 +162,10 @@ void send_result_B(const Result_B &r, int dest) {
   send_page_content(r.page, dest, tag);
 
   // = FOUND PAGES
-  send_vector<std::string>(r.found_pages, dest, tag, send_string);
+  send_vector(r.found_pages, dest, tag, send_string);
 
   // = LOG
-  send_vector<Log_Entry>(r.log, dest, tag, send_log_entry);
+  send_vector(r.log, dest, tag, send_log_entry);
 }
 
 Result_B recv_result_B(int &src) {
@@ -185,7 +185,30 @@ Result_B recv_result_B(int &src) {
   return r;
 }
 
-// == NEEDED FOR A
+void send_result_A(const Result_A &r, int dest) {
+  int tag = TAG_RESULT_A;
+
+  send_string(r.base_url, dest, tag);
+  send_graph(r.graph, dest, tag);
+
+  send_vector(r.contents, dest, tag, send_page_content);
+  send_vector(r.log, dest, tag, send_log_entry);
+}
+
+Result_A recv_result_A(int &src) {
+  int tag = TAG_RESULT_A;
+  Result_A r;
+
+  r.base_url = recv_string(src, tag);
+  r.graph = recv_graph(src, tag);
+
+  r.contents = recv_vector<Page_Content>(src, tag, recv_page_content);
+  r.log = recv_vector<Log_Entry>(src, tag, recv_log_entry);
+
+  return r;
+}
+
+// == INTERMEDIATE
 
 void send_heading(const Heading &h, int dest, int tag) {
   send_int(h.depth, dest, tag);
@@ -270,29 +293,6 @@ Website_Graph recv_graph(int &src, int tag) {
   g.refs = recv_vector<Reference>(src, tag, recv_reference);
 
   return g;
-}
-
-void send_result_A(const Result_A &r, int dest) {
-  int tag = TAG_RESULT_A;
-
-  send_string(r.base_url, dest, tag);
-  send_graph(r.graph, dest, tag);
-
-  send_vector(r.contents, dest, tag, send_page_content);
-  send_vector(r.log, dest, tag, send_log_entry);
-}
-
-Result_A recv_result_A(int &src) {
-  int tag = TAG_RESULT_A;
-  Result_A r;
-
-  r.base_url = recv_string(src, tag);
-  r.graph = recv_graph(src, tag);
-
-  r.contents = recv_vector<Page_Content>(src, tag, recv_page_content);
-  r.log = recv_vector<Log_Entry>(src, tag, recv_log_entry);
-
-  return r;
 }
 
 } // namespace mpi

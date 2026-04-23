@@ -26,8 +26,8 @@ std::string readWholeFile(const std::string &path);
 std::string downloadHTML(const std::string &url);
 
 namespace mpi {
-// some functions are one-liners (send_int), but they are useful thanks to the
-// same function syntax
+// UTILS for MPI sending and receiving different kinds of messages
+// some functions are one-liners (send_int), but they are consistent with others
 
 // NOTE: for simpler use - different contexts, so clash is not likely
 using namespace worker::_detail;
@@ -91,7 +91,7 @@ std::vector<T> recv_vector(int &src, int tag, T_recv_fn fn) {
 // =====
 // === CUSTOM STRUCTS
 
-// == NEEDED FOR B
+// == RESULTS
 
 // send Result_B to dest. tag is already set to correct tag
 void send_result_B(const Result_B &r, int dest);
@@ -100,7 +100,14 @@ void send_result_B(const Result_B &r, int dest);
 // IF src is MPI_ANY_SOURCE, it will be filled with actual worker ID
 Result_B recv_result_B(int &src);
 
-// == NEEDED FOR A
+// send result_A to dest, tag is already set to correct tag
+void send_result_A(const Result_A &h, int dest);
+
+// receive result_A, tag is already set to correct tag
+// IF src is MPI_ANY_SOURCE, it will be filled with actual worker ID
+Result_A recv_result_A(int &src);
+
+// == INTERMEDIATE
 
 // send heading to dest
 void send_heading(const Heading &h, int dest, int tag);
@@ -136,13 +143,6 @@ void send_graph(const Website_Graph &h, int dest, int tag);
 // receive website graph
 // IF src is MPI_ANY_SOURCE, it will be filled with actual worker ID
 Website_Graph recv_graph(int &src, int tag);
-
-// send result_A to dest, tag is already set to correct tag
-void send_result_A(const Result_A &h, int dest);
-
-// receive result_A, tag is already set to correct tag
-// IF src is MPI_ANY_SOURCE, it will be filled with actual worker ID
-Result_A recv_result_A(int &src);
 
 } // namespace mpi
 
