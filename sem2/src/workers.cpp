@@ -569,16 +569,11 @@ Result_B process_B(int rank, const std::string &url) {
 
   // fill all found headings
   auto headings = find_occurences(contents_sv, "<h");
-  log(r.log, LOG::INFO,
-      std::format("[B {}] Found {} headings", rank, headings.size()));
   for (const auto &heading_pos : headings) {
     auto heading = find_heading(contents_sv, heading_pos);
     if (heading.text.empty()) {
       continue; // skip invalid headings
     }
-    log(r.log, LOG::INFO,
-        std::format("[B {}] Found heading: h{}: {}", rank, heading.depth,
-                    heading.text));
     r.page.headings.push_back(heading);
   }
 

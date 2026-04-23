@@ -42,6 +42,13 @@ void send_int(int num, int dest, int tag);
 // IF src is MPI_ANY_SOURCE, it will be filled with actual worker ID
 int recv_int(int &src, int tag);
 
+// send any long long to some MPI worker
+void send_long(long long num, int dest, int tag);
+
+// receive a long long number
+// IF src is MPI_ANY_SOURCE, it will be filled with actual worker ID
+long long recv_long(int &src, int tag);
+
 // send any string to some MPI worker
 void send_string(const std::string &s, int dest, int tag);
 

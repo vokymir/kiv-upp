@@ -113,6 +113,22 @@ int recv_int(int &src, int tag) {
   return num;
 }
 
+void send_long(long num, int dest, int tag) {
+  MPI_Send(&num, 1, MPI_LONG_LONG, dest, tag, MPI_COMM_WORLD);
+}
+
+long long recv_long(int &src, int tag) {
+  MPI_Status status;
+  long long num;
+
+  MPI_Recv(&num, 1, MPI_LONG_LONG, src, tag, MPI_COMM_WORLD, &status);
+  if (src == MPI_ANY_SOURCE) {
+    src = status.MPI_SOURCE;
+  }
+
+  return num;
+}
+
 void send_string(const std::string &s, int dest, int tag) {
   int len = static_cast<int>(s.size());
 
@@ -223,14 +239,14 @@ void send_log_entry(const Log_Entry &l, int dest, int tag) {
                 l.time.time_since_epoch())
                 .count();
 
-  send_int(static_cast<int>(ts), dest, tag);
+  send_long(ts, dest, tag);
   send_string(l.msg, dest, tag);
 }
 
 Log_Entry recv_log_entry(int &src, int tag) {
   Log_Entry l;
 
-  int ts = recv_int(src, tag);
+  long long ts = recv_long(src, tag);
   l.time = std::chrono::system_clock::time_point(std::chrono::milliseconds(ts));
 
   l.msg = recv_string(src, tag);
